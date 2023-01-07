@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/jsonlog"
 	_ "github.com/lib/pq"
 	"net/http"
@@ -30,6 +31,7 @@ type config struct {
 type application struct {
 	config config
 	logger *jsonlog.Logger
+	models data.Models
 	//session       *sessions.Session
 	//templateCache map[string]*template.Template
 	//users         interface {

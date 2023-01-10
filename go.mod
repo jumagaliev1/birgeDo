@@ -7,4 +7,7 @@ require (
 	golang.org/x/crypto v0.5.0
 )
 
-require github.com/lib/pq v1.10.7
+require (
+	github.com/justinas/alice v1.2.0
+	github.com/lib/pq v1.10.7
+)

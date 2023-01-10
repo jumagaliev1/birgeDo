@@ -1,5 +1,5 @@
 {{template "base" .}}
-{{define "title"}}Snippet #{{.ID}}{{end}}
+{{define "title"}}Room #{{.Room.ID}}{{end}}
 {{define "body"}}
 <div class='snippet'>
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
@@ -18,7 +18,7 @@
                     <form action="/task" method="POST" class="form login">
                         <div class="form__field">
                             <input id="title" type="text" name='title' class="form__input" placeholder="Task Title" required="">
-                            <input name="room_id" value="{{.ID}}" style="visibility: hidden">
+                            <input name="room_id" value="{{.Room.ID}}" style="visibility: hidden">
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
@@ -31,8 +31,8 @@
         </div>
     </div>
     <div class='metadata'>
-        <strong>{{.Title}}</strong>
-        <span>#{{.ID}}</span>
+        <strong>{{.Room.Title}}</strong>
+        <span>#{{.Room.ID}}</span>
     </div>
     <table class="table table-bordered">
         <thead>

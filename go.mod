@@ -11,3 +11,8 @@ require (
 	github.com/justinas/alice v1.2.0
 	github.com/lib/pq v1.10.7
 )
+
+require (
+	github.com/golangcollege/sessions v1.2.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+)

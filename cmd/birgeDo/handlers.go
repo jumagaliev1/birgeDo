@@ -42,22 +42,9 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/showRoom.page.go.html",
-		"./ui/html/base.layout.go.html",
-		"./ui/html/footer.partial.go.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.Execute(w, room)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, r, "showRoom.page.go.html", &templateData{
+		Room: room,
+	})
 }
 
 func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +61,7 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 			app.serverError(w, err)
 			return
 		}
+		app.session.Put(r, "flash", "Room successfully created!")
 		http.Redirect(w, r, fmt.Sprintf("/room/%d", id), http.StatusSeeOther)
 
 	} else {

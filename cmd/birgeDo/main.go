@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/golangcollege/sessions"
 	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/jsonlog"
 	_ "github.com/lib/pq"
@@ -30,9 +31,10 @@ type config struct {
 	}
 }
 type application struct {
-	config config
-	logger *jsonlog.Logger
-	models data.Models
+	config  config
+	logger  *jsonlog.Logger
+	models  data.Models
+	session *sessions.Session
 	//session       *sessions.Session
 	templateCache map[string]*template.Template
 	//users         interface {
@@ -49,6 +51,9 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://birgedo:password@localhost/birgedo", "PostgreSQL DSN")
+
+	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
+
 	flag.Parse()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
@@ -64,11 +69,17 @@ func main() {
 	if err != nil {
 		logger.PrintError(err, nil)
 	}
+
+	session := sessions.New([]byte(*secret))
+	session.Lifetime = 12 * time.Hour
+	//session.Secure = true
+
 	app := &application{
 		logger:        logger,
 		config:        cfg,
 		models:        data.NewModels(db),
 		templateCache: templateCache,
+		session:       session,
 	}
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),

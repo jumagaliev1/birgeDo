@@ -15,7 +15,7 @@ type RoomModel struct {
 	DB *sql.DB
 }
 
-func (m RoomModel) Insert(room *Room) error {
+func (m RoomModel) Insert(room *Room) (int, error) {
 	query := `
 		INSERT INTO rooms (title)
 		VALUES ($1)
@@ -26,9 +26,9 @@ func (m RoomModel) Insert(room *Room) error {
 
 	err := m.DB.QueryRowContext(ctx, query, room.Title).Scan(&room.ID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return int(room.ID), nil
 }
 
 func (m RoomModel) GetByID(id int64) (*Room, error) {
@@ -37,14 +37,12 @@ func (m RoomModel) GetByID(id int64) (*Room, error) {
 			FROM rooms
 			WHERE id = $1`
 	var room Room
-
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&room.ID,
-		&room.Title,
-	)
+		&room.Title)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):

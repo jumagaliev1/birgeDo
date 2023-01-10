@@ -8,6 +8,7 @@ import (
 	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/jsonlog"
 	_ "github.com/lib/pq"
+	"html/template"
 	"net/http"
 	"os"
 	"time"
@@ -33,7 +34,7 @@ type application struct {
 	logger *jsonlog.Logger
 	models data.Models
 	//session       *sessions.Session
-	//templateCache map[string]*template.Template
+	templateCache map[string]*template.Template
 	//users         interface {
 	//	Insert(string, string, string) error
 	//	Authenticate(string, string) (int, error)
@@ -43,7 +44,7 @@ type application struct {
 
 func main() {
 	var cfg config
-	flag.IntVar(&cfg.port, "port", 4000, "Server port")
+	flag.IntVar(&cfg.port, "port", 4001, "Server port")
 
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
@@ -59,9 +60,15 @@ func main() {
 	defer db.Close()
 
 	logger.PrintInfo("database connection pool established", nil)
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		logger.PrintError(err, nil)
+	}
 	app := &application{
-		logger: logger,
-		config: cfg,
+		logger:        logger,
+		config:        cfg,
+		models:        data.NewModels(db),
+		templateCache: templateCache,
 	}
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),

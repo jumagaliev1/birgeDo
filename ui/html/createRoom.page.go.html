@@ -1,0 +1,13 @@
+{{template "base" .}}
+{{define "title"}}Create a New Room{{end}}
+{{define "body"}}
+<form action='/room' method='POST'>
+    <div>
+        <label>Title:</label>
+        <input type='text' name='title'>
+    </div>
+    <div>
+        <input type='submit' value='Create room'>
+    </div>
+</form>
+{{end}}

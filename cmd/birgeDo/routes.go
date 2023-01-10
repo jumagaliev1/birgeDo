@@ -16,5 +16,5 @@ func (app *application) routes() http.Handler {
 
 	//router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
 	router.ServeFiles("/static/*filepath", http.Dir("ui/static"))
-	return router
+	return secureHeaders(router)
 }

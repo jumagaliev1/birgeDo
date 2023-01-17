@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS users (
     activated bool NOT NULL,
     version integer NOT NULL DEFAULT 1
 );
+
+ALTER TABLE users ADD CONSTRAINT users_uc_email UNIQUE (email);

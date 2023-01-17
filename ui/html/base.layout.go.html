@@ -12,9 +12,25 @@
         <h1><a href='/'>BirgeDo</a></h1>
     </header>
     <nav>
-        <a href='/'>Home</a>
-        <a href="/myroom">My Rooms</a>
-        <a href="/room">Create room</a>
+        <div>
+            <a href='/'>Home</a>
+            {{if .AuthenticatedUser}}
+                <a href="/room">Create room</a>
+                <a href="/myroom">My Rooms</a>
+            {{end}}
+
+        </div>
+        <div>
+            {{if .AuthenticatedUser}}
+            <form action='/user/logout' method='POST'>
+                <button>Logout</button>
+            </form>
+            {{ else }}
+            {{ .AuthenticatedUser}}
+            <a href='/user/signup'>Signup</a>
+            <a href='/user/login'>Login</a>
+            {{ end }}
+        </div>
     </nav>
     <section>
         {{with .Flash}}

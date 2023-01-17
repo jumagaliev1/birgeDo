@@ -2,12 +2,17 @@
 {{define "title"}}Create a New Room{{end}}
 {{define "body"}}
 <form action='/room' method='POST'>
-    <div>
-        <label>Title:</label>
-        <input type='text' name='title'>
-    </div>
-    <div>
-        <input type='submit' value='Create room'>
-    </div>
+    {{with .Form}}
+        <div>
+            <label>Title:</label>
+            {{with .Errors.Get "title"}}
+            <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='text' name='title' value='{{.Get "title"}}'>
+        </div>
+        <div>
+            <input type='submit' value='Create room'>
+        </div>
+    {{end}}
 </form>
 {{end}}

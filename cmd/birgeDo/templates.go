@@ -2,21 +2,22 @@ package main
 
 import (
 	"github.com/jumagaliev1/birgeDo/internal/data"
+	"github.com/jumagaliev1/birgeDo/pkg/forms"
 	"html/template"
 	"path/filepath"
 	"time"
 )
 
 type templateData struct {
-	AuthenticatedUser *data.User
+	AuthenticatedUser int
 	CSRFToken         string
 	CurrentYear       int
 	Flash             string
-	//Form              *forms.Form
-	Room  *data.Room
-	Rooms []*data.Room
-	Task  *data.Task
-	Tasks []*data.Task
+	Form              *forms.Form
+	Room              *data.Room
+	Rooms             []*data.Room
+	Task              *data.Task
+	Tasks             []*data.Task
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {

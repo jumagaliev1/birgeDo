@@ -31,11 +31,10 @@ type config struct {
 	}
 }
 type application struct {
-	config  config
-	logger  *jsonlog.Logger
-	models  data.Models
-	session *sessions.Session
-	//session       *sessions.Session
+	config        config
+	logger        *jsonlog.Logger
+	models        data.Models
+	session       *sessions.Session
 	templateCache map[string]*template.Template
 	//users         interface {
 	//	Insert(string, string, string) error

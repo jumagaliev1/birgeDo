@@ -14,5 +14,6 @@ require (
 
 require (
 	github.com/golangcollege/sessions v1.2.0 // indirect
+	github.com/justinas/nosurf v1.1.1 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 )

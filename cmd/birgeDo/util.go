@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/justinas/nosurf"
 	"net/http"
 	"strconv"
@@ -49,6 +50,10 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (app *application) authenticatedUser(r *http.Request) int {
-	return app.session.GetInt(r, "userID")
+func (app *application) authenticatedUser(r *http.Request) *data.User {
+	user, ok := r.Context().Value(contextKeyUser).(*data.User)
+	if !ok {
+		return nil
+	}
+	return user
 }

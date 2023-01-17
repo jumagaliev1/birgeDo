@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+type contextKey string
+
+var contextKeyUser = contextKey("user")
+
 type config struct {
 	port int
 	env  string

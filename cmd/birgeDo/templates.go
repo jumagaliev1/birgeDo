@@ -9,13 +9,13 @@ import (
 )
 
 type templateData struct {
-	AuthenticatedUser int
+	AuthenticatedUser *data.User
 	CSRFToken         string
 	CurrentYear       int
 	Flash             string
 	Form              *forms.Form
 	Room              *data.Room
-	Rooms             []*data.Room
+	Rooms             []data.Room
 	Task              *data.Task
 	Tasks             []*data.Task
 }

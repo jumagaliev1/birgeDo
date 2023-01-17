@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS rooms_users (
+CREATE TABLE IF NOT EXISTS users_tasks (
     user_id bigint NOT NULL REFERENCES users ON DELETE CASCADE,
     task_id bigint NOT NULL REFERENCES tasks ON DELETE CASCADE,
     done boolean NOT NULL,

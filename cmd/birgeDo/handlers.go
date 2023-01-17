@@ -185,3 +185,23 @@ func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/", 303)
 }
+
+func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
+	user := app.authenticatedUser(r)
+
+	rooms, err := app.models.Users.GetRoomsByUser(user.ID)
+	if err != nil {
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				app.session.Put(r, "flash", "No yet Rooms. You can create")
+				app.render(w, r, "myRooms.page.go.html", &templateData{})
+			default:
+				app.serverError(w, err)
+			}
+			return
+		}
+	}
+	app.render(w, r, "myRooms.page.go.html", &templateData{Rooms: rooms})
+
+}

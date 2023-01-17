@@ -9,12 +9,14 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
-	dynamicMiddleware := alice.New(app.session.Enable, noSurf)
+	dynamicMiddleware := alice.New(app.session.Enable, noSurf, app.authenticate)
 	router.Handler(http.MethodGet, "/", dynamicMiddleware.ThenFunc(app.home))
-	router.Handler(http.MethodGet, "/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
-	router.Handler(http.MethodPost, "/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
-	router.Handler(http.MethodGet, "/room/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
-	router.Handler(http.MethodPost, "/task", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
+	router.Handler(http.MethodGet, "/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createRoom))
+	router.Handler(http.MethodPost, "/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createRoom))
+	router.Handler(http.MethodGet, "/room/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showRoom))
+	router.Handler(http.MethodPost, "/task", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createTask))
+
+	router.Handler(http.MethodGet, "/myroom", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserRooms))
 
 	router.Handler(http.MethodGet, "/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
 	router.Handler(http.MethodPost, "/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))

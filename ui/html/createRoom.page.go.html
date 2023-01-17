@@ -2,6 +2,7 @@
 {{define "title"}}Create a New Room{{end}}
 {{define "body"}}
 <form action='/room' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
         <div>
             <label>Title:</label>

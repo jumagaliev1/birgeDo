@@ -42,19 +42,27 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 		}
 		form := forms.New(r.PostForm)
 		form.Required("title")
-		form.MaxLength("title", 4)
+		form.MaxLength("title", 10)
 		//title := r.PostForm.Get("title")
 		if !form.Valid() {
 			app.render(w, r, "createRoom.page.go.html", &templateData{Form: form})
 			return
 		}
-		id, err := app.models.Room.Insert(&data.Room{Title: form.Get("title")})
+		user := app.authenticatedUser(r)
+		roomID, err := app.models.Room.Insert(&data.Room{Title: form.Get("title")})
 		if err != nil {
+			app.logger.PrintError(err, nil)
+			app.serverError(w, err)
+			return
+		}
+		err = app.models.Users.InsertRoomUser(user.ID, roomID)
+		if err != nil {
+			app.logger.PrintError(err, nil)
 			app.serverError(w, err)
 			return
 		}
 		app.session.Put(r, "flash", "Room successfully created!")
-		http.Redirect(w, r, fmt.Sprintf("/room/%d", id), http.StatusSeeOther)
+		http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
 
 	} else {
 		app.render(w, r, "createRoom.page.go.html", &templateData{Form: forms.New(nil)})
@@ -190,18 +198,67 @@ func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
 	user := app.authenticatedUser(r)
 
 	rooms, err := app.models.Users.GetRoomsByUser(user.ID)
+	if len(rooms) == 0 {
+		//TO-DO fix this
+		app.session.Put(r, "flash", "No yet Tasks. You can create")
+	}
+
 	if err != nil {
-		if err != nil {
-			switch {
-			case errors.Is(err, data.ErrRecordNotFound):
-				app.session.Put(r, "flash", "No yet Rooms. You can create")
-				app.render(w, r, "myRooms.page.go.html", &templateData{})
-			default:
-				app.serverError(w, err)
-			}
-			return
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.session.Put(r, "flash", "No yet Rooms. You can create")
+			app.render(w, r, "myRooms.page.go.html", &templateData{})
+		default:
+			app.serverError(w, err)
 		}
+		return
+
 	}
 	app.render(w, r, "myRooms.page.go.html", &templateData{Rooms: rooms})
 
+}
+
+func (app *application) showUserTasks(w http.ResponseWriter, r *http.Request) {
+	user := app.authenticatedUser(r)
+	tasks, err := app.models.Users.GetTasksByUser(user.ID)
+	if len(tasks) == 0 {
+		//TO-DO fix this
+		app.session.Put(r, "flash", "No yet Tasks. You can create")
+	}
+
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.session.Put(r, "flash", "No yet Tasks. You can create")
+
+			app.render(w, r, "myTasks.page.go.html", &templateData{})
+		default:
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	app.render(w, r, "myTasks.page.go.html", &templateData{Tasks: tasks})
+
+}
+
+func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(r.PostForm)
+	form.Required("roomID", "userID")
+	if !form.Valid() {
+		app.render(w, r, "signup.page.go.html", &templateData{Form: form})
+	}
+	roomID, err := strconv.Atoi(form.Get("roomID"))
+	userID, err := strconv.Atoi(form.Get("userID"))
+	err = app.models.Users.InsertRoomUser(userID, roomID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
 }

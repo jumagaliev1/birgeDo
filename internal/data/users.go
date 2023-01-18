@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -197,4 +198,57 @@ func (m UserModel) GetRoomsByUser(id int) ([]Room, error) {
 	}
 
 	return rooms, nil
+}
+
+func (m UserModel) GetTasksByUser(id int) ([]Task, error) {
+	query := `
+		SELECT t.id, t.title, t.room_id, ut.done from tasks t
+		INNER JOIN users_tasks ut ON t.id = ut.task_id AND ut.user_id = $1`
+
+	var tasks []Task
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	fmt.Println("no dta")
+	rows, err := m.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	for rows.Next() {
+		var task Task
+		err = rows.Scan(&task.ID, &task.Title, &task.RoomID, &task.Done)
+		if err != nil {
+			switch {
+			case errors.Is(err, sql.ErrNoRows):
+				return nil, ErrRecordNotFound
+			default:
+				return nil, err
+			}
+		}
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
+func (m UserModel) InsertRoomUser(userID, roomID int) error {
+	query := `
+		INSERT INTO rooms_users (user_id, room_id) 
+		VALUES ($1, $2)`
+
+	args := []interface{}{userID, roomID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

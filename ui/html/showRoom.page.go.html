@@ -5,6 +5,35 @@
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
         Create task
     </button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addUser">
+        Add User
+    </button>
+    <div class="modal fade" id="addUser" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserLabel">Create Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="/addUser" method="POST" class="form login">
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <div class="form__field">
+                            <input id="userID" type="text" name="userID" class="form__input" placeholder="User ID" required="">
+                            <input name="roomID" value="{{.Room.ID}}" style="visibility: hidden">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Add</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -16,6 +45,7 @@
                 </div>
                 <div class="modal-body">
                     <form action="/task" method="POST" class="form login">
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                         <div class="form__field">
                             <input id="title" type="text" name='title' class="form__input" placeholder="Task Title" required="">
                             <input name="room_id" value="{{.Room.ID}}" style="visibility: hidden">

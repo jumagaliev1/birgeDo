@@ -15,8 +15,10 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createRoom))
 	router.Handler(http.MethodGet, "/room/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showRoom))
 	router.Handler(http.MethodPost, "/task", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createTask))
+	router.Handler(http.MethodPost, "/addUser", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.AddUser))
 
-	router.Handler(http.MethodGet, "/myroom", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserRooms))
+	router.Handler(http.MethodGet, "/myrooms", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserRooms))
+	router.Handler(http.MethodGet, "/mytasks", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserTasks))
 
 	router.Handler(http.MethodGet, "/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
 	router.Handler(http.MethodPost, "/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))

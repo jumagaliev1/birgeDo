@@ -11,6 +11,7 @@ type Task struct {
 	ID     int64  `json:"id"`
 	Title  string `json:"title"`
 	RoomID int64  `json:"room_id"`
+	Done   bool   `json:"done"`
 }
 
 type TaskModel struct {

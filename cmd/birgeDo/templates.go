@@ -17,7 +17,7 @@ type templateData struct {
 	Room              *data.Room
 	Rooms             []data.Room
 	Task              *data.Task
-	Tasks             []*data.Task
+	Tasks             []data.Task
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {

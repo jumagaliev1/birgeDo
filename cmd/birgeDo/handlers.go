@@ -79,10 +79,18 @@ func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 	title := r.PostForm.Get("title")
 	roomID := r.PostForm.Get("room_id")
 	id, err := strconv.Atoi(roomID)
-	err = app.models.Task.Insert(&data.Task{Title: title, RoomID: int64(id)})
+	taskID, err := app.models.Task.Insert(&data.Task{Title: title, RoomID: int64(id)})
+	usersID, err := app.models.Users.GetUsersByRoom(id)
 	if err != nil {
 		app.serverError(w, err)
 		return
+	}
+	for _, uID := range usersID {
+		err = app.models.Users.InsertUserTask(uID, taskID)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
 	}
 	http.Redirect(w, r, fmt.Sprintf("/room/%d", id), http.StatusSeeOther)
 }

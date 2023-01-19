@@ -18,7 +18,7 @@ type TaskModel struct {
 	DB *sql.DB
 }
 
-func (m TaskModel) Insert(task *Task) error {
+func (m TaskModel) Insert(task *Task) (int, error) {
 	query := `
 			INSERT INTO tasks (title, room_id)
 			VALUES ($1, $2)
@@ -30,9 +30,9 @@ func (m TaskModel) Insert(task *Task) error {
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&task.ID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return int(task.ID),nil
 }
 func (m TaskModel) GetByID(id int64) (*Task, error) {
 	query := `

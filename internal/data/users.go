@@ -252,3 +252,45 @@ func (m UserModel) InsertRoomUser(userID, roomID int) error {
 
 	return nil
 }
+
+func (m UserModel) GetUsersByRoom(roomID int) ([]int, error) {
+	query := `
+		SELECT user_id FROM rooms_users
+		WHERE room_id = $1`
+
+	var users []int
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, roomID)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, id)
+	}
+
+	return users, nil
+}
+
+func (m UserModel) InsertUserTask(userID, taskID int) error {
+	query := `
+		INSERT INTO users_tasks (user_id, task_id, done)
+		VALUES ($1, $2, $3)`
+
+	args := []interface{}{userID, taskID, false}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}

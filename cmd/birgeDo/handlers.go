@@ -27,9 +27,50 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+	tasks, err := app.models.Task.GetByRoomID(room.ID)
+	if err == data.ErrRecordNotFound {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	usersTasks, err := app.models.Users.GetUserTask(room.ID)
+	if err == data.ErrRecordNotFound {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
 
+	var tpdata = make(map[string]data.UserTasks)
+	for _, ut := range usersTasks {
+		if tpdata[ut.User].Task == nil {
+			var dataTask []data.Task
+			dataTask = append(dataTask, data.Task{Title: ut.Task, Done: ut.Done})
+			tpdata[ut.User] = data.UserTasks{User: ut.User, Task: &dataTask}
+		} else {
+			*tpdata[ut.User].Task = append(*tpdata[ut.User].Task, data.Task{Title: ut.Task, Done: ut.Done})
+
+		}
+	}
+	var userTasks []data.UserTasks
+	for _, tp := range tpdata {
+		userTasks = append(userTasks, tp)
+
+	}
+
+	//var data []UserTask
+	//for i := 0; i < len(tasks); i++ {
+	//	for
+	//	userTask := UserTask{Task: tasks[i],
+	//		Done: }
+	//}
 	app.render(w, r, "showRoom.page.go.html", &templateData{
-		Room: room,
+		Room:     room,
+		Tasks:    tasks,
+		UserTask: userTasks,
 	})
 }
 
@@ -93,6 +134,34 @@ func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.Redirect(w, r, fmt.Sprintf("/room/%d", id), http.StatusSeeOther)
+}
+func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
+	user := app.authenticatedUser(r)
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+
+	task, err := app.models.Users.GetUserTaskByBothID(user.ID, id)
+	if err == data.ErrRecordNotFound {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	if task.Done == false {
+		err = app.models.Task.UpdateUserTaskByBothIDTrue(user.ID, int(id))
+	} else {
+		err = app.models.Task.UpdateUserTaskByBothIDTrue(user.ID, int(id))
+	}
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	http.Redirect(w, r, "/mytasks", http.StatusSeeOther)
+
 }
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
 

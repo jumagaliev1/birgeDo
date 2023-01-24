@@ -15,6 +15,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createRoom))
 	router.Handler(http.MethodGet, "/room/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showRoom))
 	router.Handler(http.MethodPost, "/task", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createTask))
+	router.Handler(http.MethodGet, "/task/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.updateTask))
 	router.Handler(http.MethodPost, "/addUser", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.AddUser))
 
 	router.Handler(http.MethodGet, "/myrooms", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserRooms))

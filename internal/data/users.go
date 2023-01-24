@@ -22,6 +22,15 @@ type User struct {
 	Activated bool      `json:"activated"`
 	Version   int       `json:"-"`
 }
+type UserTasks struct {
+	User string
+	Task *[]Task
+}
+type UserTask struct {
+	User string
+	Task string
+	Done bool
+}
 
 type password struct {
 	plaintext *string
@@ -293,4 +302,45 @@ func (m UserModel) InsertUserTask(userID, taskID int) error {
 		return err
 	}
 	return nil
+}
+
+func (m UserModel) GetUserTask(roomID int64) ([]UserTask, error) {
+	query := `
+		SELECT u.name, t.title, ut.done FROM users_tasks ut 
+		    JOIN users u ON u.id = ut.user_id 
+		    JOIN tasks t ON t.id = ut.task_id
+		    AND t.room_id = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var usersTasks []UserTask
+	rows, err := m.DB.QueryContext(ctx, query, roomID)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var userTask UserTask
+		err = rows.Scan(&userTask.User, &userTask.Task, &userTask.Done)
+		if err != nil {
+			return nil, err
+		}
+		usersTasks = append(usersTasks, userTask)
+
+	}
+	return usersTasks, nil
+}
+
+func (m UserModel) GetUserTaskByBothID(userID int, taskID int64) (*UserTask, error) {
+	query := `
+		SELECT user_id, task_id, done FROM users_tasks 
+		WHERE user_id = $1 and task_id = $2`
+	args := []interface{}{userID, taskID}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var userTask UserTask
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&userTask.User, &userTask.Task, &userTask.Done)
+	if err != nil {
+		return nil, err
+	}
+	return &userTask, err
 }

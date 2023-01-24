@@ -64,81 +64,22 @@
         <strong>{{.Room.Title}}</strong>
         <span>#{{.Room.ID}}</span>
     </div>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th scope="col">Tasks</th>
-                <th scope="col">Alibi</th>
-                <th scope="col">Zanggar</th>
-                <th scope="col">Duman</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Read Book</td>
-                <td>
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" id="customCheck1" checked>
-                        <label class="custom-control-label" for="customCheck1">1</label>
-                    </div>
-                </td>
-                <td>
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input"  checked>
-                        <label class="custom-control-label" for="customCheck1">1</label>
-                    </div>
-                </td>
-                <td>
-                    <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input"  checked>
-                        <label class="custom-control-label" for="customCheck1">1</label>
-                    </div>
-                </td>
-            </tr>
-        <tr>
-            <td>Solve Leetcode</td>
-            <td>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" id="customCheck2">
-                    <label class="custom-control-label" for="customCheck2">2</label>
-                </div>
-            </td>
-            <td>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input">
-                    <label class="custom-control-label" for="customCheck2">2</label>
-                </div>
-            </td>
-            <td>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input">
-                    <label class="custom-control-label" for="customCheck2">2</label>
-                </div>
-            </td>
-        </tr>
-        <tr>
-            <td>Do train</td>
-            <td>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" id="customCheck3">
-                    <label class="custom-control-label" for="customCheck3">3</label>
-                </div>
-            </td>
-            <td>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input">
-                    <label class="custom-control-label" for="customCheck3">3</label>
-                </div>
-            </td>
-            <td>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input">
-                    <label class="custom-control-label" for="customCheck3">3</label>
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="metadata" style="display: -webkit-box;">
+    {{ range .UserTask }}
+    <div>
+        <h4>{{.User}}</h4>
+        {{ range .Task }}
+        <div class="" style="display: -webkit-box;">
+            {{if .Done }}
+            <s>{{.Title}}</s>
+            {{else }}
+            <p>{{.Title}}</p>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+    {{ end }}
+    </div>
     <div class='metadata'>
         <time>Created: </time>
         <time>Expires: </time>

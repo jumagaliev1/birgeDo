@@ -91,7 +91,7 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(24 * time.Hour)
 	go func() {
 		<-ticker.C
 		err = app.models.Task.ResetAllTasks()

@@ -43,13 +43,20 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
+	users, err := app.models.Users.GetAll()
+	if err == data.ErrRecordNotFound {
+		app.notFound(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
 	var tpdata = make(map[string]data.UserTasks)
 	for _, ut := range usersTasks {
 		if tpdata[ut.User].Task == nil {
 			var dataTask []data.Task
 			dataTask = append(dataTask, data.Task{Title: ut.Task, Done: ut.Done})
-			tpdata[ut.User] = data.UserTasks{User: ut.User, Task: &dataTask}
+			tpdata[ut.User] = data.UserTasks{UserID: ut.UserID, User: ut.User, Task: &dataTask}
 		} else {
 			*tpdata[ut.User].Task = append(*tpdata[ut.User].Task, data.Task{Title: ut.Task, Done: ut.Done})
 
@@ -71,6 +78,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		Room:     room,
 		Tasks:    tasks,
 		UserTask: userTasks,
+		Users:    users,
 	})
 }
 
@@ -83,8 +91,7 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 		}
 		form := forms.New(r.PostForm)
 		form.Required("title")
-		form.MaxLength("title", 10)
-		//title := r.PostForm.Get("title")
+		form.MaxLength("title", 50)
 		if !form.Valid() {
 			app.render(w, r, "createRoom.page.go.html", &templateData{Form: form})
 			return
@@ -307,7 +314,6 @@ func (app *application) showUserTasks(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.session.Put(r, "flash", "No yet Tasks. You can create")
-
 			app.render(w, r, "myTasks.page.go.html", &templateData{})
 		default:
 			app.serverError(w, err)
@@ -328,13 +334,73 @@ func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
 	form := forms.New(r.PostForm)
 	form.Required("roomID", "userID")
 	if !form.Valid() {
-		app.render(w, r, "signup.page.go.html", &templateData{Form: form})
+		app.render(w, r, "showRoom.page.go.html", &templateData{Form: form})
 	}
 	roomID, err := strconv.Atoi(form.Get("roomID"))
 	userID, err := strconv.Atoi(form.Get("userID"))
 	err = app.models.Users.InsertRoomUser(userID, roomID)
 	if err != nil {
-		app.serverError(w, err)
+		switch {
+		case err == data.ErrDuplicateKey:
+			app.session.Put(r, "flash", "User almost exists")
+			http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
+		default:
+			app.serverError(w, err)
+		}
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
+}
+
+func (app *application) RemoveUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(r.PostForm)
+	form.Required("roomID", "userID")
+	if !form.Valid() {
+		app.render(w, r, "showRoom.page.go.html", &templateData{Form: form})
+	}
+	roomID, err := strconv.Atoi(form.Get("roomID"))
+	userID, err := strconv.Atoi(form.Get("userID"))
+	err = app.models.Users.RemoveRoomUser(userID, roomID)
+	if err != nil {
+		switch {
+		case err == data.ErrDuplicateKey:
+			app.session.Put(r, "flash", "User almost exists removed")
+			http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
+		default:
+			app.serverError(w, err)
+		}
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
+}
+
+func (app *application) RemoveTask(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(r.PostForm)
+	form.Required("roomID", "taskID")
+	if !form.Valid() {
+		app.render(w, r, "showRoom.page.go.html", &templateData{Form: form})
+	}
+	roomID, err := strconv.Atoi(form.Get("roomID"))
+	taskID, err := strconv.Atoi(form.Get("taskID"))
+	err = app.models.Users.RemoveUserTask(taskID, roomID)
+	if err != nil {
+		switch {
+		case err == data.ErrDuplicateKey:
+			app.session.Put(r, "flash", "Task almost exists removed")
+			http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
+		default:
+			app.serverError(w, err)
+		}
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)

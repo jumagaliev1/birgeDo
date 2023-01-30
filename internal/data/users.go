@@ -14,22 +14,24 @@ var (
 )
 
 type User struct {
-	ID        int       `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Password  password  `json:"-"`
-	Activated bool      `json:"activated"`
-	Version   int       `json:"-"`
+	ID        int
+	CreatedAt time.Time
+	Name      string
+	Email     string
+	Password  password
+	Activated bool
+	Version   int
 }
 type UserTasks struct {
-	User string
-	Task *[]Task
+	UserID int
+	User   string
+	Task   *[]Task
 }
 type UserTask struct {
-	User string
-	Task string
-	Done bool
+	UserID int
+	User   string
+	Task   string
+	Done   bool
 }
 
 type password struct {
@@ -87,7 +89,37 @@ func (m UserModel) Insert(user *User) error {
 	}
 	return nil
 }
+func (m UserModel) GetAll() ([]User, error) {
+	query := `
+ 		SELECT id, name, email
+		FROM users`
 
+	var users []User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "rooms_users_pkey"`:
+			return nil, ErrDuplicateKey
+		default:
+			return nil, err
+		}
+	}
+
+	for rows.Next() {
+		var user User
+		rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+		)
+		users = append(users, user)
+	}
+	return users, nil
+}
 func (m UserModel) Get(id int) (*User, error) {
 	query := `
 		SELECT id, created_at, name, email, password_hash, activated, version
@@ -256,9 +288,53 @@ func (m UserModel) InsertRoomUser(userID, roomID int) error {
 	defer cancel()
 	_, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
+		switch {
+		case err.Error() == `pq: duplicate key value violates unique constraint "rooms_users_pkey"`:
+			return ErrDuplicateKey
+		default:
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m UserModel) RemoveRoomUser(userID, roomID int) error {
+	query := `DELETE FROM users_tasks 
+				WHERE user_id = $1 AND task_id IN (SELECT id FROM tasks WHERE room_id = $2)`
+
+	args := []interface{}{userID, roomID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	query = `DELETE FROM rooms_users 
+				WHERE user_id = $1 AND room_id = $2`
+	_, err = m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func (m UserModel) RemoveUserTask(taskID, roomID int) error {
+	query := `DELETE FROM tasks 
+				WHERE id = $1 AND room_id = $2`
+
+	args := []interface{}{taskID, roomID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -306,7 +382,7 @@ func (m UserModel) InsertUserTask(userID, taskID int) error {
 
 func (m UserModel) GetUserTask(roomID int64) ([]UserTask, error) {
 	query := `
-		SELECT u.name, t.title, ut.done FROM users_tasks ut 
+		SELECT u.id, u.name, t.title, ut.done FROM users_tasks ut 
 		    JOIN users u ON u.id = ut.user_id 
 		    JOIN tasks t ON t.id = ut.task_id
 		    AND t.room_id = $1`
@@ -320,7 +396,7 @@ func (m UserModel) GetUserTask(roomID int64) ([]UserTask, error) {
 	}
 	for rows.Next() {
 		var userTask UserTask
-		err = rows.Scan(&userTask.User, &userTask.Task, &userTask.Done)
+		err = rows.Scan(&userTask.UserID, &userTask.User, &userTask.Task, &userTask.Done)
 		if err != nil {
 			return nil, err
 		}

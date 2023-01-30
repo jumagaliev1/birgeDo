@@ -27,7 +27,6 @@
                 <button>Logout ({{.AuthenticatedUser.Name}})</button>
             </form>
             {{ else }}
-            {{ .AuthenticatedUser}}
             <a href='/user/signup'>Signup</a>
             <a href='/user/login'>Login</a>
             {{ end }}

@@ -1,3 +1,0 @@
-CREATE TRIGGER user_task
-    AFTER INSERT ON rooms
-    FOR EACH ROW

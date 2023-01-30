@@ -4,9 +4,9 @@
 <form action='/user/login' method='POST' novalidate>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
-    {{with .Errors.Get "generic"}}
-    <div class='error'>{{.}}</div>
-    {{end}}
+        {{with .Errors.Get "generic"}}
+        <div class='error'>{{.}}</div>
+        {{end}}
     <div>
         <label>Email:</label>
         <input type='email' name='email' value='{{.Get "email"}}'>

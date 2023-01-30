@@ -2,12 +2,80 @@
 {{define "title"}}Room #{{.Room.ID}}{{end}}
 {{define "body"}}
 <div class='snippet'>
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createTask">
         Create task
     </button>
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addUser">
         Add User
     </button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#removeUser">
+        Remove User
+    </button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#removeTask">
+        Remove Task
+    </button>
+    <div class="modal fade" id="removeTask" tabindex="-1" role="dialog" aria-labelledby="removeUser" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="removeTaskLabel">Remove Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="/removeTask" method="POST" class="form login">
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <div class="form__field">
+                            <select name="taskID">
+                                {{ range .Tasks }}
+                                <option value="{{.ID}}">{{ .Title }}</option>
+                                {{ end }}
+                            </select>
+                            <input name="roomID" value="{{.Room.ID}}" style="visibility: hidden">
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Remove</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="removeUser" tabindex="-1" role="dialog" aria-labelledby="removeUser" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="removeUserLabel">Remove User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="/removeUser" method="POST" class="form login">
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <div class="form__field">
+                            <select name="userID">
+                                {{ range .UserTask }}
+                                <option value="{{.UserID}}">{{ .User }}</option>
+                                {{ end }}
+                            </select>
+                            <input name="roomID" value="{{.Room.ID}}" style="visibility: hidden">
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-success">Remove</button>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="modal fade" id="addUser" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -21,9 +89,14 @@
                     <form action="/addUser" method="POST" class="form login">
                         <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                         <div class="form__field">
-                            <input id="userID" type="text" name="userID" class="form__input" placeholder="User ID" required="">
+                            <select name="userID">
+                                {{ range .Users }}
+                                <option value="{{.ID}}">{{ .Name }}</option>
+                                {{ end }}
+                            </select>
                             <input name="roomID" value="{{.Room.ID}}" style="visibility: hidden">
                         </div>
+
                         <div class="modal-footer">
                             <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-success">Add</button>
@@ -34,7 +107,7 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="createTask" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -79,10 +152,6 @@
         {{end}}
     </div>
     {{ end }}
-    </div>
-    <div class='metadata'>
-        <time>Created: </time>
-        <time>Expires: </time>
     </div>
 </div>
 {{end}}

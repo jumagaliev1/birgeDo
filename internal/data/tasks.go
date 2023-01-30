@@ -171,3 +171,23 @@ func (m TaskModel) UpdateUserTaskByBothIDTrue(userID int, taskID int) error {
 	return nil
 
 }
+
+func (m TaskModel) ResetAllTasks() error {
+	query := `
+		UPDATE users_tasks
+			SET done = false`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrRecordNotFound
+		default:
+			return err
+		}
+	}
+	return nil
+}

@@ -91,6 +91,17 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+	ticker := time.NewTicker(1 * time.Minute)
+	go func() {
+		<-ticker.C
+		err = app.models.Task.ResetAllTasks()
+		if err != nil {
+			app.logger.PrintError(err, nil)
+			ticker.Stop()
+			return
+		}
+		app.logger.PrintInfo("Success Reset All Tasks", nil)
+	}()
 	logger.PrintInfo(fmt.Sprintf("Starting server on %d", cfg.port), nil)
 	err = srv.ListenAndServe()
 	logger.PrintError(err, nil)

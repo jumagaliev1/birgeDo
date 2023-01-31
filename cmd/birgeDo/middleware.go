@@ -79,3 +79,26 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func (app *application) requireAccessRoom(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.authenticatedUser(r)
+		id, err := app.readIDParam(r)
+		if err != nil {
+			app.notFound(w)
+			return
+		}
+		users, err := app.models.Users.GetUsersByRoom(int(id))
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		for _, val := range users {
+			if val == user.ID {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+		http.Redirect(w, r, "/myrooms", 302)
+	})
+}

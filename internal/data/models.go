@@ -13,9 +13,10 @@ var (
 )
 
 type Models struct {
-	Users UserModel
-	Task  TaskModel
-	Room  RoomModel
+	Users  UserModel
+	Task   TaskModel
+	Room   RoomModel
+	Tokens TokenModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -26,7 +27,8 @@ func NewModels(db *sql.DB) Models {
 		Task: TaskModel{
 			DB: db,
 		},
-		Room: RoomModel{DB: db},
+		Room:   RoomModel{DB: db},
+		Tokens: TokenModel{DB: db},
 	}
 
 }

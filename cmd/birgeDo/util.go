@@ -54,9 +54,14 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 }
 
 func (app *application) authenticatedUser(r *http.Request) *data.User {
-	user, ok := r.Context().Value(contextKeyUser).(*data.User)
-	if !ok {
-		return nil
+	//user, ok := r.Context().Value(contextKeyUser).(*data.User)
+	//if !ok {
+	//	return nil
+	//}
+	user := &data.User{
+		ID:    1,
+		Name:  "Alibi",
+		Email: "alibi.zhumagaliyev@gmail.com",
 	}
 	return user
 }

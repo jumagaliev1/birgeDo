@@ -17,7 +17,7 @@ import (
 
 type contextKey string
 
-var contextKeyUser = contextKey("user")
+const userContextKey = contextKey("user")
 
 type config struct {
 	port int

@@ -2,9 +2,11 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
@@ -13,15 +15,22 @@ var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
+var AnonymousUser = &User{}
+
 type User struct {
-	ID        int
-	CreatedAt time.Time
-	Name      string
-	Email     string
-	Password  password
-	Activated bool
-	Version   int
+	ID        int       `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Password  password  `json:"-"`
+	Activated bool      `json:"activated"`
+	Version   int       `json:"-"`
 }
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
+
 type UserTasks struct {
 	UserID int
 	User   string
@@ -62,6 +71,31 @@ func (p *password) Matches(plaintextPassword string) (bool, error) {
 		}
 	}
 	return true, nil
+}
+
+func ValidateEmail(v *validator.Validator, email string) {
+	v.Check(email != "", "email", "must be provided")
+	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be a valid email address")
+}
+
+func ValidatePasswordPlaintext(v *validator.Validator, password string) {
+	v.Check(password != "", "password", "must be provided")
+	v.Check(len(password) >= 8, "password", "must be at least 8 bytes long")
+	v.Check(len(password) <= 72, "password", "must not be more than 72 bytes long")
+}
+
+func ValidateUser(v *validator.Validator, user *User) {
+	v.Check(user.Name != "", "name", "must be provided")
+	v.Check(len(user.Name) <= 500, "name", "must not be more than 500 bytes long")
+
+	ValidateEmail(v, user.Email)
+
+	if user.Password.plaintext != nil {
+		ValidatePasswordPlaintext(v, *user.Password.plaintext)
+	}
+	if user.Password.hash == nil {
+		panic("missing password hash for user")
+	}
 }
 
 type UserModel struct {
@@ -419,4 +453,42 @@ func (m UserModel) GetUserTaskByBothID(userID int, taskID int64) (*UserTask, err
 		return nil, err
 	}
 	return &userTask, err
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+	query := `
+			SELECT users.id, users.created_at, users.name, users.email, users.password_hash, users.activated, users.version
+			FROM users
+			INNER JOIN tokens
+			ON users.id = tokens.user_id
+			WHERE tokens.hash = $1
+			AND tokens.scope = $2
+			AND tokens.expiry > $3`
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Email,
+		&user.Password.hash,
+		&user.Activated,
+		&user.Version,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &user, nil
 }

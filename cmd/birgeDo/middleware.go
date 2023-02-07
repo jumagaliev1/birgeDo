@@ -1,11 +1,13 @@
 package main
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"github.com/jumagaliev1/birgeDo/internal/data"
+	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"github.com/justinas/nosurf"
 	"net/http"
+	"strings"
 )
 
 func secureHeaders(next http.Handler) http.Handler {
@@ -58,27 +60,28 @@ func noSurf(next http.Handler) http.Handler {
 
 	return csrfHandler
 }
-func (app *application) authenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		exists := app.session.Exists(r, "userID")
-		if !exists {
-			next.ServeHTTP(w, r)
-			return
-		}
-		user, err := app.models.Users.Get(app.session.GetInt(r, "userID"))
-		if err == data.ErrRecordNotFound {
-			app.session.Remove(r, "userID")
-			next.ServeHTTP(w, r)
-			return
-		} else if err != nil {
-			app.serverError(w, err)
-			return
-		}
 
-		ctx := context.WithValue(r.Context(), contextKeyUser, user)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
+//func (app *application) authenticate(next http.Handler) http.Handler {
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		exists := app.session.Exists(r, "userID")
+//		if !exists {
+//			next.ServeHTTP(w, r)
+//			return
+//		}
+//		user, err := app.models.Users.Get(app.session.GetInt(r, "userID"))
+//		if err == data.ErrRecordNotFound {
+//			app.session.Remove(r, "userID")
+//			next.ServeHTTP(w, r)
+//			return
+//		} else if err != nil {
+//			app.serverError(w, err)
+//			return
+//		}
+//
+//		ctx := context.WithValue(r.Context(), contextKeyUser, user)
+//		next.ServeHTTP(w, r.WithContext(ctx))
+//	})
+//}
 
 func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -100,5 +103,49 @@ func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 			}
 		}
 		http.Redirect(w, r, "/myrooms", 302)
+	})
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Authorization")
+
+		authorizationHeader := r.Header.Get("Authorization")
+
+		if authorizationHeader == "" {
+			r = app.contextSetUser(r, data.AnonymousUser)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		headerParts := strings.Split(authorizationHeader, " ")
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		token := headerParts[1]
+
+		v := validator.New()
+
+		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+
+		r = app.contextSetUser(r, user)
+
+		next.ServeHTTP(w, r)
 	})
 }

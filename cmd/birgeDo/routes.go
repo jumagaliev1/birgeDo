@@ -30,6 +30,8 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/user/login", dynamicMiddleware.ThenFunc(app.loginUser))
 	router.Handler(http.MethodPost, "/user/logout", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
 
+	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 	//router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
 	router.ServeFiles("/static/*filepath", http.Dir("ui/static"))
 	return standardMiddleware.Then(router)

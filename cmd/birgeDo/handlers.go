@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jumagaliev1/birgeDo/internal/data"
+	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"github.com/jumagaliev1/birgeDo/pkg/forms"
 	"net/http"
 	"strconv"
@@ -74,46 +75,63 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 	//	userTask := UserTask{Task: tasks[i],
 	//		Done: }
 	//}
-	app.render(w, r, "showRoom.page.go.html", &templateData{
-		Room:     room,
-		Tasks:    tasks,
-		UserTask: userTasks,
-		Users:    users,
-	})
+	app.writeJSON(w, http.StatusOK, envelope{"room": room, "tasks": tasks, "userTasks": userTasks, "users": users}, nil)
+	//app.render(w, r, "showRoom.page.go.html", &templateData{
+	//	Room:     room,
+	//	Tasks:    tasks,
+	//	UserTask: userTasks,
+	//	Users:    users,
+	//})
 }
 
 func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		err := r.ParseForm()
+		var input struct {
+			Title string `json:"title"`
+		}
+		err := app.readJSON(w, r, &input)
 		if err != nil {
-			app.clientError(w, http.StatusBadRequest)
+			app.badRequestResponse(w, r, err)
 			return
 		}
-		form := forms.New(r.PostForm)
-		form.Required("title")
-		form.MaxLength("title", 50)
-		if !form.Valid() {
-			app.render(w, r, "createRoom.page.go.html", &templateData{Form: form})
+		room := &data.Room{
+			Title: input.Title,
+		}
+		v := validator.New()
+
+		if data.ValidateRoom(v, room); v.Valid() {
+			app.failedValidationResponse(w, r, v.Errors)
 			return
 		}
+		app.session.Put(r, "userID", 1)
 		user := app.authenticatedUser(r)
-		roomID, err := app.models.Room.Insert(&data.Room{Title: form.Get("title")})
+		roomID, err := app.models.Room.Insert(room)
 		if err != nil {
 			app.logger.PrintError(err, nil)
-			app.serverError(w, err)
+			app.serverErrorResponse(w, r, err)
 			return
 		}
 		err = app.models.Users.InsertRoomUser(user.ID, roomID)
 		if err != nil {
 			app.logger.PrintError(err, nil)
-			app.serverError(w, err)
+			app.serverErrorResponse(w, r, err)
 			return
 		}
+		headers := make(http.Header)
+		headers.Set("Location", fmt.Sprintf("/v1/rooms/%d", room.ID))
+
 		app.session.Put(r, "flash", "Room successfully created!")
-		http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
+		err = app.writeJSON(w, http.StatusCreated, envelope{"room": room, "data": app.addDefaultData(&templateData{}, r)}, headers)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+
+		//http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
 
 	} else {
-		app.render(w, r, "createRoom.page.go.html", &templateData{Form: forms.New(nil)})
+		//app.writeJSON(w, http.StatusOK, envelope{"form": forms.New(nil)}, nil)
+		//app.render(w, r, "createRoom.page.go.html", &templateData{Form: forms.New(nil)})
 	}
 
 }

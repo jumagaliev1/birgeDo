@@ -40,11 +40,11 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 }
 func (app *application) requireAuthenticatedUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.authenticatedUser(r) == nil {
-			http.Redirect(w, r, "user/login", 302)
+		user := app.contextGetUser(r)
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -102,7 +102,8 @@ func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 				return
 			}
 		}
-		http.Redirect(w, r, "/myrooms", 302)
+		app.notPermittedResponse(w, r)
+		//http.Redirect(w, r, "/myrooms", 302)
 	})
 }
 

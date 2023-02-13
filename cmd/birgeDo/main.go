@@ -15,10 +15,6 @@ import (
 	"time"
 )
 
-type contextKey string
-
-const userContextKey = contextKey("user")
-
 type config struct {
 	port int
 	env  string

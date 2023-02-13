@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+type contextKey string
+
+const userContextKey = contextKey("user")
+
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
 	ts, ok := app.templateCache[name]
 	if !ok {
@@ -54,14 +58,9 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 }
 
 func (app *application) authenticatedUser(r *http.Request) *data.User {
-	//user, ok := r.Context().Value(contextKeyUser).(*data.User)
-	//if !ok {
-	//	return nil
-	//}
-	user := &data.User{
-		ID:    1,
-		Name:  "Alibi",
-		Email: "alibi.zhumagaliyev@gmail.com",
+	user, ok := r.Context().Value(userContextKey).(*data.User)
+	if !ok {
+		return nil
 	}
 	return user
 }

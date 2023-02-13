@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -284,7 +283,6 @@ func (m UserModel) GetTasksByUser(id int) ([]Task, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	fmt.Println("no dta")
 	rows, err := m.DB.QueryContext(ctx, query, id)
 	if err != nil {
 		switch {

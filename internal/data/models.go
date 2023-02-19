@@ -32,3 +32,28 @@ func NewModels(db *sql.DB) Models {
 	}
 
 }
+
+type InputAddUser struct {
+	RoomID int `json:"roomID"`
+	UserID int `json:"userID"`
+}
+
+type InputRemoveTask struct {
+	TaskID int `json:"taskID"`
+	RoomID int `json:"roomID"`
+}
+
+type InputRegisterUser struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type InputAuthUser struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type InputCreateRoom struct {
+	Title string `json:"title"`
+}

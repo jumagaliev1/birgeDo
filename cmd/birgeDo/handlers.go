@@ -5,14 +5,22 @@ import (
 	"fmt"
 	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/validator"
-	"github.com/jumagaliev1/birgeDo/pkg/forms"
+	_ "github.com/swaggo/swag/example/celler/httputil"
 	"net/http"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "home.page.go.html", &templateData{})
-}
-
+// @Summary      Show Room Data
+// @Description  get room data by id
+//@Security	ApiKeyAuth
+// @Tags         Room
+// @Accept       json
+// @Produce      json
+// @Param        id path  int  true  "Room ID"
+// @Success      200  {object}  []data.UserTasks
+// @Failure      400  {object}  Error
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /room/{id} [get]
 func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -68,75 +76,75 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	//var data []UserTask
-	//for i := 0; i < len(tasks); i++ {
-	//	for
-	//	userTask := UserTask{Task: tasks[i],
-	//		Done: }
-	//}
 	app.writeJSON(w, http.StatusOK, envelope{"room": room, "tasks": tasks, "userTasks": userTasks, "users": users}, nil)
-	//app.render(w, r, "showRoom.page.go.html", &templateData{
-	//	Room:     room,
-	//	Tasks:    tasks,
-	//	UserTask: userTasks,
-	//	Users:    users,
-	//})
+
 }
 
+// @Summary      Create Room
+// @Description  Create Room ...
+//@Security	ApiKeyAuth
+// @Tags         Room
+// @Accept       json
+// @Produce      json
+// @Param InputCreteRoom body data.InputCreateRoom true "Input for create room" ""
+// @Success      200  {object}  data.Room
+// @Failure      400  {object}  Error
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /room [post]
 func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
-	app.logger.PrintInfo("Proverka", nil)
-	if r.Method == "POST" {
-		var input struct {
-			Title string `json:"title"`
-		}
-		err := app.readJSON(w, r, &input)
-		app.logger.PrintInfo("Proverka", nil)
-		if err != nil {
-			app.logError(r, err)
-			app.badRequestResponse(w, r, err)
-			return
-		}
-		room := &data.Room{
-			Title: input.Title,
-		}
-		v := validator.New()
+	input := data.InputCreateRoom{}
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.logError(r, err)
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	room := &data.Room{
+		Title: input.Title,
+	}
+	v := validator.New()
 
-		if data.ValidateRoom(v, room); v.Valid() {
-			app.failedValidationResponse(w, r, v.Errors)
-			return
-		}
-		user := app.contextGetUser(r)
-		roomID, err := app.models.Room.Insert(room)
-		if err != nil {
-			app.logger.PrintError(err, nil)
-			app.serverErrorResponse(w, r, err)
-			return
-		}
-		err = app.models.Users.InsertRoomUser(user.ID, roomID)
-		if err != nil {
-			app.logger.PrintError(err, nil)
-			app.serverErrorResponse(w, r, err)
-			return
-		}
-		headers := make(http.Header)
-		headers.Set("Location", fmt.Sprintf("/v1/room/%d", room.ID))
+	if data.ValidateRoom(v, room); v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+	user := app.contextGetUser(r)
+	roomID, err := app.models.Room.Insert(room)
+	if err != nil {
+		app.logger.PrintError(err, nil)
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	err = app.models.Users.InsertRoomUser(user.ID, roomID)
+	if err != nil {
+		app.logger.PrintError(err, nil)
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/room/%d", room.ID))
 
-		app.session.Put(r, "flash", "Room successfully created!")
-		err = app.writeJSON(w, http.StatusCreated, envelope{"room": room, "data": app.addDefaultData(&templateData{}, r)}, headers)
-		if err != nil {
-			app.serverErrorResponse(w, r, err)
-			return
-		}
-
-		//http.Redirect(w, r, fmt.Sprintf("/room/%d", roomID), http.StatusSeeOther)
-
-	} else {
-		//app.writeJSON(w, http.StatusOK, envelope{"form": forms.New(nil)}, nil)
-		//app.render(w, r, "createRoom.page.go.html", &templateData{Form: forms.New(nil)})
+	app.session.Put(r, "flash", "Room successfully created!")
+	err = app.writeJSON(w, http.StatusCreated, envelope{"room": room, "data": app.addDefaultData(&templateData{}, r)}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 }
 
+// @Summary      Create Task
+// @Description  Create Task ...
+//@Security	ApiKeyAuth
+// @Tags         Task
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  data.Task
+// @Failure      400  {object}  Error
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /task [post]
 func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Title  string `json:"title"`
@@ -164,9 +172,20 @@ func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/room/%d", input.RoomID))
 	app.writeJSON(w, http.StatusCreated, envelope{"task": input}, headers)
-
-	//http.Redirect(w, r, fmt.Sprintf("/room/%d", input.RoomID), http.StatusSeeOther)
 }
+
+// @Summary      Update Task
+// @Description  Update Task if true to false otherwise
+//@Security	ApiKeyAuth
+// @Tags         Task
+// @Accept       json
+// @Produce      json
+// @Param        id path  int  true  "Task ID"
+// @Success      200  {object}  data.Task
+// @Failure      400  {object}  Error
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /task/{id} [get]
 func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 	id, err := app.readIDParam(r)
@@ -197,114 +216,19 @@ func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
 
 	app.writeJSON(w, http.StatusSeeOther, envelope{"task": task}, headers)
 }
-func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
 
-	app.render(w, r, "signup.page.go.html", &templateData{
-
-		Form: forms.New(nil),
-	})
-}
-
-func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	form := forms.New(r.PostForm)
-	form.Required("name", "email", "password")
-	form.MatchesPattern("email", forms.EmailRX)
-	form.MinLength("password", 10)
-
-	if !form.Valid() {
-		app.render(w, r, "signup.page.go.html", &templateData{Form: form})
-	}
-	user := &data.User{
-		Name:      form.Get("name"),
-		Email:     form.Get("email"),
-		Activated: false,
-	}
-	err = user.Password.Set(form.Get("password"))
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	err = app.models.Users.Insert(user)
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrDuplicateEmail):
-			form.Errors.Add("email", "a user with this email address already exists")
-			app.render(w, r, "signup.page.go.html", &templateData{
-				Form: form,
-			})
-			return
-		default:
-			app.serverError(w, err)
-		}
-		return
-	}
-
-	app.session.Put(r, "flash", "Your signup was successful. Please log in.")
-
-	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
-
-}
-
-func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "login.page.go.html", &templateData{
-		Form: forms.New(nil),
-	})
-}
-
-func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	form := forms.New(r.PostForm)
-	form.Required("email", "password")
-	user, err := app.models.Users.GetByEmail(form.Get("email"))
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			form.Errors.Add("generic", "Email or Password is incorrect")
-			app.render(w, r, "login.page.go.html", &templateData{
-				Form: form,
-			})
-		default:
-			app.serverError(w, err)
-		}
-		return
-	}
-
-	match, err := user.Password.Matches(form.Get("password"))
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	if !match {
-		form.Errors.Add("generic", "Email or Password is incorrect")
-		app.render(w, r, "login.page.go.html", &templateData{
-			Form: form,
-		})
-		//app.invalidCredentials(w)
-		return
-	}
-	app.session.Put(r, "userID", user.ID)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
-	app.session.Remove(r, "userID")
-
-	app.session.Put(r, "flash", "You've been logged out successfully!")
-
-	http.Redirect(w, r, "/", 303)
-}
-
+// @Summary      Show User Rooms
+// @Description  ...
+//@Security	ApiKeyAuth
+// @Tags         Room
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  []data.Room
+// @Failure      400  {object}  Error
+// @Failure 401 {object} Error
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /myrooms/ [get]
 func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
 	user := app.authenticatedUser(r)
 
@@ -333,6 +257,18 @@ func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Summary      Show User Tasks
+// @Description  ..
+// @Tags         Task
+//@Security	ApiKeyAuth
+// @Accept       json
+//@Security	ApiKeyAuth
+// @Produce      json
+// @Success      200  {object}  []data.Task
+// @Failure      400  {object}  Error
+// @Failure      404  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /mytasks [get]
 func (app *application) showUserTasks(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 	tasks, err := app.models.Users.GetTasksByUser(user.ID)
@@ -357,11 +293,19 @@ func (app *application) showUserTasks(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Summary      Add User to Room
+// @Description  Add User to Room
+// @Tags Room
+// @Security	ApiKeyAuth
+// @Accept       json
+// @Produce      json
+// @Param		 roomID body data.InputAddUser true "Input for adding user"
+// @Success      200  {object}  data.UserTasks
+// @Failure      400  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /addUser [post]
 func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		RoomID int `json:"roomID"`
-		UserID int `json:"userID"`
-	}
+	input := data.InputAddUser{}
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
@@ -374,7 +318,6 @@ func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case err == data.ErrDuplicateKey:
 			app.session.Put(r, "flash", "User almost exists")
-			//http.Redirect(w, r, fmt.Sprintf("/v1/room/%d", input.RoomID), http.StatusSeeOther)
 			app.writeJSON(w, http.StatusSeeOther, envelope{"input": input}, headers)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -382,9 +325,19 @@ func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.writeJSON(w, http.StatusSeeOther, envelope{"input": input}, headers)
-	//http.Redirect(w, r, fmt.Sprintf("/room/%d", input.RoomID), http.StatusSeeOther)
 }
 
+// @Summary      Remove User
+// @Description  Remove user from Room
+// @Tags 		 Room
+// @Accept       json
+//@Security	ApiKeyAuth
+// @Produce      json
+// @Param		 input body data.InputAddUser true "Input for remove user"
+// @Success      200  {object}  data.InputAddUser
+// @Failure      400  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /removeUser [post]
 func (app *application) RemoveUser(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		UserID int `json:"userID"`
@@ -407,18 +360,26 @@ func (app *application) RemoveUser(w http.ResponseWriter, r *http.Request) {
 	}
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/room/%d", input.RoomID))
-	err = app.writeJSON(w, http.StatusOK, envelope{"input": input}, headers)
+	err = app.writeJSON(w, http.StatusSeeOther, envelope{"input": input}, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 }
 
+// @Summary      Remove Task
+// @Description  Remove task from Room
+// @Tags 		 Task
+//@Security		 ApiKeyAuth
+// @Accept       json
+// @Produce      json
+// @Param		 input body data.InputRemoveTask true "Input for remove user"
+// @Success      200  {object}  data.UserTasks
+// @Failure      400  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /removeTask [post]
 func (app *application) RemoveTask(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		TaskID int `json:"taskID"`
-		RoomID int `json:"roomID"`
-	}
+	input := data.InputRemoveTask{}
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
@@ -431,12 +392,11 @@ func (app *application) RemoveTask(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case err == data.ErrDuplicateKey:
 			app.session.Put(r, "flash", "Task almost exists removed")
-			//http.Redirect(w, r, fmt.Sprintf("/room/%d", input.RoomID), http.StatusSeeOther)
 			err = app.writeJSON(w, http.StatusOK, envelope{"input": input}, headers)
 		default:
 			app.serverError(w, err)
 		}
 		return
 	}
-	err = app.writeJSON(w, http.StatusOK, envelope{"input": input}, headers)
+	err = app.writeJSON(w, http.StatusSeeOther, envelope{"input": input}, headers)
 }

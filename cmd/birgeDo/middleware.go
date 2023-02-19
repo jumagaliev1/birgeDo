@@ -61,39 +61,17 @@ func noSurf(next http.Handler) http.Handler {
 	return csrfHandler
 }
 
-//func (app *application) authenticate(next http.Handler) http.Handler {
-//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//		exists := app.session.Exists(r, "userID")
-//		if !exists {
-//			next.ServeHTTP(w, r)
-//			return
-//		}
-//		user, err := app.models.Users.Get(app.session.GetInt(r, "userID"))
-//		if err == data.ErrRecordNotFound {
-//			app.session.Remove(r, "userID")
-//			next.ServeHTTP(w, r)
-//			return
-//		} else if err != nil {
-//			app.serverError(w, err)
-//			return
-//		}
-//
-//		ctx := context.WithValue(r.Context(), contextKeyUser, user)
-//		next.ServeHTTP(w, r.WithContext(ctx))
-//	})
-//}
-
 func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := app.authenticatedUser(r)
 		id, err := app.readIDParam(r)
 		if err != nil {
-			app.notFound(w)
+			app.notFoundResponse(w, r)
 			return
 		}
 		users, err := app.models.Users.GetUsersByRoom(int(id))
 		if err != nil {
-			app.serverError(w, err)
+			app.serverErrorResponse(w, r, err)
 			return
 		}
 		for _, val := range users {
@@ -103,7 +81,6 @@ func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 			}
 		}
 		app.notPermittedResponse(w, r)
-		//http.Redirect(w, r, "/myrooms", 302)
 	})
 }
 

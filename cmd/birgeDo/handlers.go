@@ -86,7 +86,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 // @Tags         Room
 // @Accept       json
 // @Produce      json
-// @Param InputCreteRoom body data.InputCreateRoom true "Input for create room" ""
+// @Param InputCreteRoom body data.InputCreateRoom true "Input for create room"
 // @Success      200  {object}  data.Room
 // @Failure      400  {object}  Error
 // @Failure      404  {object}  Error
@@ -135,21 +135,19 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary      Create Task
-// @Description  Create Task ...
-//@Security	ApiKeyAuth
+// @Description  Create Task
+// @Security	ApiKeyAuth
 // @Tags         Task
 // @Accept       json
 // @Produce      json
+// @Param 		 InputCreteTask body data.InputCreateTask true "Input for create task"
 // @Success      200  {object}  data.Task
 // @Failure      400  {object}  Error
 // @Failure      404  {object}  Error
 // @Failure      500  {object}  Error
 // @Router       /task [post]
 func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Title  string `json:"title"`
-		RoomID int64  `json:"roomID"`
-	}
+	input := data.InputCreateTask{}
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)

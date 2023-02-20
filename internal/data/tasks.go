@@ -9,8 +9,8 @@ import (
 
 type Task struct {
 	ID     int64  `json:"id"`
-	Title  string `json:"title"`
-	RoomID int64  `json:"room_id"`
+	Title  string `json:"title" maxlength:"30" minlength:"1"`
+	RoomID int64  `json:"room_id" existsid:"rooms"`
 	Done   bool   `json:"done"`
 }
 

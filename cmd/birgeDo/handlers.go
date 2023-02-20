@@ -11,7 +11,7 @@ import (
 
 // @Summary      Show Room Data
 // @Description  get room data by id
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Tags         Room
 // @Accept       json
 // @Produce      json
@@ -82,7 +82,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 
 // @Summary      Create Room
 // @Description  Create Room ...
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Tags         Room
 // @Accept       json
 // @Produce      json
@@ -126,7 +126,9 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 	headers.Set("Location", fmt.Sprintf("/v1/room/%d", room.ID))
 
 	app.session.Put(r, "flash", "Room successfully created!")
-	err = app.writeJSON(w, http.StatusCreated, envelope{"room": room, "data": app.addDefaultData(&templateData{}, r)}, headers)
+	err = app.writeJSON(
+		w, http.StatusCreated, envelope{"room": room, "data": app.addDefaultData(&templateData{}, r)}, headers,
+	)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -136,7 +138,7 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 
 // @Summary      Create Task
 // @Description  Create Task ...
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Tags         Task
 // @Accept       json
 // @Produce      json
@@ -155,13 +157,13 @@ func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-
-	taskID, err := app.models.Task.Insert(&data.Task{Title: input.Title, RoomID: input.RoomID})
-	usersID, err := app.models.Users.GetUsersByRoom(int(input.RoomID))
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
+	task := data.Task{Title: input.Title, RoomID: input.RoomID}
+	if ok, errors := app.IsValid(task); !ok {
+		app.failedValidationResponse(w, r, errors)
 		return
 	}
+	taskID, _ := app.models.Task.Insert(&data.Task{Title: input.Title, RoomID: input.RoomID})
+	usersID, _ := app.models.Users.GetUsersByRoom(int(input.RoomID))
 	for _, uID := range usersID {
 		err = app.models.Users.InsertUserTask(uID, taskID)
 		if err != nil {
@@ -176,7 +178,7 @@ func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 
 // @Summary      Update Task
 // @Description  Update Task if true to false otherwise
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Tags         Task
 // @Accept       json
 // @Produce      json
@@ -219,7 +221,7 @@ func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
 
 // @Summary      Show User Rooms
 // @Description  ...
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Tags         Room
 // @Accept       json
 // @Produce      json
@@ -260,9 +262,9 @@ func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
 // @Summary      Show User Tasks
 // @Description  ..
 // @Tags         Task
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Accept       json
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Produce      json
 // @Success      200  {object}  []data.Task
 // @Failure      400  {object}  Error
@@ -331,7 +333,7 @@ func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
 // @Description  Remove user from Room
 // @Tags 		 Room
 // @Accept       json
-//@Security	ApiKeyAuth
+// @Security	ApiKeyAuth
 // @Produce      json
 // @Param		 input body data.InputAddUser true "Input for remove user"
 // @Success      200  {object}  data.InputAddUser
@@ -370,7 +372,7 @@ func (app *application) RemoveUser(w http.ResponseWriter, r *http.Request) {
 // @Summary      Remove Task
 // @Description  Remove task from Room
 // @Tags 		 Task
-//@Security		 ApiKeyAuth
+// @Security		 ApiKeyAuth
 // @Accept       json
 // @Produce      json
 // @Param		 input body data.InputRemoveTask true "Input for remove user"

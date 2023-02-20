@@ -9,6 +9,7 @@ import (
 )
 
 func (app *application) IsValid(object interface{}) (isValid bool, mp map[string][]string) {
+	mp = make(map[string][]string)
 	isValid = true
 	values := reflect.ValueOf(object)
 	types := reflect.TypeOf(object)
@@ -29,22 +30,22 @@ func (app *application) callMethodsByStructTag(
 	isValid = true
 	if _, ok := field.Tag.Lookup("consists"); ok {
 		valid, consists := checkConsistsTag(value, field.Tag.Get("consists"))
-		isValid = valid || isValid
+		isValid = valid && isValid
 		hints = append(hints, consists...)
 	}
 	if _, ok := field.Tag.Lookup("existsid"); ok {
 		valid := app.IDExistsTag(value, field.Tag.Get("existsid"))
-		isValid = valid || isValid
+		isValid = valid && isValid
 		hints = append(hints, "doesn't exist with this id")
 	}
 	if _, ok := field.Tag.Lookup("maxlength"); ok {
 		valid, consists := maxTag(value, field.Tag.Get("maxlength"))
-		isValid = valid || isValid
+		isValid = valid && isValid
 		hints = append(hints, consists)
 	}
 	if _, ok := field.Tag.Lookup("minlength"); ok {
 		valid, consists := minTag(value, field.Tag.Get("minlength"))
-		isValid = valid || isValid
+		isValid = valid && isValid
 		hints = append(hints, consists)
 	}
 	return

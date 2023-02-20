@@ -36,11 +36,6 @@ type application struct {
 	models        data.Models
 	session       *sessions.Session
 	templateCache map[string]*template.Template
-	//users         interface {
-	//	Insert(string, string, string) error
-	//	Authenticate(string, string) (int, error)
-	//	Get(int) (*models.User, error)
-	//}
 }
 
 // @title           BirgeDo API
@@ -75,21 +70,16 @@ func main() {
 	defer db.Close()
 
 	logger.PrintInfo("database connection pool established", nil)
-	templateCache, err := newTemplateCache("./ui/html/")
-	if err != nil {
-		logger.PrintError(err, nil)
-	}
 
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = 12 * time.Hour
-	//session.Secure = true
 
 	app := &application{
-		logger:        logger,
-		config:        cfg,
-		models:        data.NewModels(db),
-		templateCache: templateCache,
-		session:       session,
+		logger: logger,
+		config: cfg,
+		models: data.NewModels(db),
+		//templateCache: templateCache,
+		session: session,
 	}
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
@@ -98,6 +88,7 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+
 	ticker := time.NewTicker(24 * time.Hour)
 	go func() {
 		<-ticker.C
@@ -109,8 +100,11 @@ func main() {
 		}
 		app.logger.PrintInfo("Success Reset All Tasks", nil)
 	}()
+
 	logger.PrintInfo(fmt.Sprintf("Starting server on %d", cfg.port), nil)
+
 	err = srv.ListenAndServe()
+
 	logger.PrintError(err, nil)
 }
 

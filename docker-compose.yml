@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build: ./
+    command: ./birgedo
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  db:
+    restart: always
+    image: postgres:latest
+    volumes:
+      - .:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - "5436:5432"
+    networks:
+      - backend
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - db
+    volumes:
+      - ./../migrations:/migrations
+    networks:
+      - backend
+    command:
+      [ "-path", "/migrations", "-database", "postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable", "up" ]
+networks:
+  backend:
+    driver: bridge

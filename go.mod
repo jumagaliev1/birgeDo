@@ -13,7 +13,7 @@ require (
 	github.com/justinas/nosurf v1.1.1
 	github.com/lib/pq v1.10.7
 	github.com/swaggo/swag v1.8.10
-	github.com/swaggo/swag/example/celler v0.0.0-20230125210707-aa3e8d5fa2f6
+	github.com/swaggo/swag/example/celler v0.0.0-20230216124926-37f466e7e8cc
 )
 
 require (

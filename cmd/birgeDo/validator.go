@@ -34,17 +34,17 @@ func (app *application) callMethodsByStructTag(
 		hints = append(hints, consists...)
 	}
 	if _, ok := field.Tag.Lookup("existsid"); ok {
-		valid := app.IDExistsTag(value, field.Tag.Get("existsid"))
+		valid := app.checkIDExistsTag(value, field.Tag.Get("existsid"))
 		isValid = valid && isValid
 		hints = append(hints, "doesn't exist with this id")
 	}
 	if _, ok := field.Tag.Lookup("maxlength"); ok {
-		valid, consists := maxTag(value, field.Tag.Get("maxlength"))
+		valid, consists := checkMaxTag(value, field.Tag.Get("maxlength"))
 		isValid = valid && isValid
 		hints = append(hints, consists)
 	}
 	if _, ok := field.Tag.Lookup("minlength"); ok {
-		valid, consists := minTag(value, field.Tag.Get("minlength"))
+		valid, consists := checkMinTag(value, field.Tag.Get("minlength"))
 		isValid = valid && isValid
 		hints = append(hints, consists)
 	}
@@ -72,27 +72,27 @@ func checkConsistsTag(value, tag string) (isValid bool, hints []string) {
 	return
 }
 
-func (app *application) IDExistsTag(value, table string) (isValid bool) {
+func (app *application) checkIDExistsTag(value, table string) (isValid bool) {
 	id, _ := strconv.Atoi(value)
 	var err error
 	if table == "rooms" {
-		_, err = app.models.Room.GetByID(int64(id))
+		_, err = app.Room.GetByID(int64(id))
 	} else if table == "users" {
-		_, err = app.models.Users.Get(id)
+		_, err = app.Users.Get(id)
 	} else if table == "tasks" {
-		_, err = app.models.Task.GetByID(int64(id))
+		_, err = app.Task.GetByID(int64(id))
 	} else if table == "tokens" {
-		_, err = app.models.Task.GetByID(int64(id))
+		_, err = app.Task.GetByID(int64(id))
 	}
 	return err == nil
 }
 
-func maxTag(value, tag string) (bool, string) {
+func checkMaxTag(value, tag string) (bool, string) {
 	length, _ := strconv.Atoi(tag)
 	return len(value) < length, "length should be less than " + value
 }
 
-func minTag(value, tag string) (isValid bool, hint string) {
+func checkMinTag(value, tag string) (isValid bool, hint string) {
 	length, _ := strconv.Atoi(tag)
 	return len(value) > length, "length should be more than " + value
 }

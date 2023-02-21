@@ -27,7 +27,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		app.notFoundResponse(w, r)
 		return
 	}
-	room, err := app.models.Room.GetByID(id)
+	room, err := app.Room.GetByID(id)
 	if err == data.ErrRecordNotFound {
 		app.notFoundResponse(w, r)
 		return
@@ -35,7 +35,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	tasks, err := app.models.Task.GetByRoomID(room.ID)
+	tasks, err := app.Task.GetByRoomID(room.ID)
 	if err == data.ErrRecordNotFound {
 		app.notFoundResponse(w, r)
 		return
@@ -43,7 +43,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	usersTasks, err := app.models.Users.GetUserTask(room.ID)
+	usersTasks, err := app.Users.GetUserTask(room.ID)
 	if err == data.ErrRecordNotFound {
 		app.notFoundResponse(w, r)
 		return
@@ -51,7 +51,7 @@ func (app *application) showRoom(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	users, err := app.models.Users.GetAll()
+	users, err := app.Users.GetAll()
 	if err == data.ErrRecordNotFound {
 		app.notFoundResponse(w, r)
 		return
@@ -110,13 +110,13 @@ func (app *application) createRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := app.contextGetUser(r)
-	roomID, err := app.models.Room.Insert(room)
+	roomID, err := app.Room.Insert(room)
 	if err != nil {
 		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	err = app.models.Users.InsertRoomUser(user.ID, roomID)
+	err = app.Users.InsertRoomUser(user.ID, roomID)
 	if err != nil {
 		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
@@ -159,13 +159,13 @@ func (app *application) createTask(w http.ResponseWriter, r *http.Request) {
 	}
 	task := data.Task{Title: input.Title, RoomID: input.RoomID}
 	if ok, errors := app.IsValid(task); !ok {
-		app.failedValidationResponse(w, r, errors)
+		fmt.Println(errors)
 		return
 	}
-	taskID, _ := app.models.Task.Insert(&data.Task{Title: input.Title, RoomID: input.RoomID})
-	usersID, _ := app.models.Users.GetUsersByRoom(int(input.RoomID))
+	taskID, _ := app.Task.Insert(&data.Task{Title: input.Title, RoomID: input.RoomID})
+	usersID, _ := app.Users.GetUsersByRoom(int(input.RoomID))
 	for _, uID := range usersID {
-		err = app.models.Users.InsertUserTask(uID, taskID)
+		err = app.Users.InsertUserTask(uID, taskID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return
@@ -196,7 +196,7 @@ func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := app.models.Users.GetUserTaskByBothID(user.ID, id)
+	task, err := app.Users.GetUserTaskByBothID(user.ID, id)
 	if err == data.ErrRecordNotFound {
 		app.notFoundResponse(w, r)
 		return
@@ -205,9 +205,9 @@ func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if task.Done == false {
-		err = app.models.Task.UpdateUserTaskByBothIDTrue(user.ID, int(id))
+		err = app.Task.UpdateUserTaskByBothIDTrue(user.ID, int(id))
 	} else {
-		err = app.models.Task.UpdateUserTaskByBothIDFalse(user.ID, int(id))
+		err = app.Task.UpdateUserTaskByBothIDFalse(user.ID, int(id))
 	}
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -234,7 +234,7 @@ func (app *application) updateTask(w http.ResponseWriter, r *http.Request) {
 func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
 	user := app.authenticatedUser(r)
 
-	rooms, err := app.models.Users.GetRoomsByUser(user.ID)
+	rooms, err := app.Users.GetRoomsByUser(user.ID)
 	if len(rooms) == 0 {
 		//TO-DO fix this
 		app.errorResponse(w, r, http.StatusOK, "No yet Tasks. You can create")
@@ -273,7 +273,7 @@ func (app *application) showUserRooms(w http.ResponseWriter, r *http.Request) {
 // @Router       /mytasks [get]
 func (app *application) showUserTasks(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	tasks, err := app.models.Users.GetTasksByUser(user.ID)
+	tasks, err := app.Users.GetTasksByUser(user.ID)
 	if len(tasks) == 0 {
 		//TO-DO fix this
 		app.session.Put(r, "flash", "No yet Tasks. You can create")
@@ -315,7 +315,7 @@ func (app *application) AddUser(w http.ResponseWriter, r *http.Request) {
 	}
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/room/%d", input.RoomID))
-	err = app.models.Users.InsertRoomUser(input.UserID, input.RoomID)
+	err = app.Users.InsertRoomUser(input.UserID, input.RoomID)
 	if err != nil {
 		switch {
 		case err == data.ErrDuplicateKey:
@@ -350,7 +350,7 @@ func (app *application) RemoveUser(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	err = app.models.Users.RemoveRoomUser(input.UserID, input.RoomID)
+	err = app.Users.RemoveRoomUser(input.UserID, input.RoomID)
 	if err != nil {
 		switch {
 		case err == data.ErrDuplicateKey:
@@ -387,7 +387,7 @@ func (app *application) RemoveTask(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	err = app.models.Users.RemoveUserTask(input.TaskID, input.RoomID)
+	err = app.Users.RemoveUserTask(input.TaskID, input.RoomID)
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/room/%d", input.RoomID))
 	if err != nil {

@@ -31,9 +31,9 @@ type config struct {
 	}
 }
 type application struct {
-	config        config
-	logger        *jsonlog.Logger
-	models        data.Models
+	config config
+	logger *jsonlog.Logger
+	data.Models
 	session       *sessions.Session
 	templateCache map[string]*template.Template
 }
@@ -77,7 +77,7 @@ func main() {
 	app := &application{
 		logger: logger,
 		config: cfg,
-		models: data.NewModels(db),
+		Models: data.NewModels(db),
 		//templateCache: templateCache,
 		session: session,
 	}
@@ -92,7 +92,7 @@ func main() {
 	ticker := time.NewTicker(24 * time.Hour)
 	go func() {
 		<-ticker.C
-		err = app.models.Task.ResetAllTasks()
+		err = app.Task.ResetAllTasks()
 		if err != nil {
 			app.logger.PrintError(err, nil)
 			ticker.Stop()

@@ -13,7 +13,7 @@ func (app *application) routes() http.Handler {
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
-	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+	standardMiddleware := alice.New(app.enableCORS, app.recoverPanic, app.logRequest, secureHeaders)
 	dynamicMiddleware := alice.New(app.session.Enable, app.authenticate)
 	router.Handler(http.MethodPost, "/v1/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createRoom))
 	router.Handler(http.MethodGet, "/v1/room/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireAccessRoom).ThenFunc(app.showRoom))

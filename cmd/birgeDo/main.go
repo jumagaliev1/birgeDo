@@ -47,7 +47,7 @@ type application struct {
 // @version         1.0
 // @description     API BirgeDo
 
-// @host      localhost:4000
+// @host      159.65.195.0:4000
 // @BasePath  /v1
 
 // @securityDefinitions.apikey ApiKeyAuth

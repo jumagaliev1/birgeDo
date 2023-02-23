@@ -30,7 +30,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 	//router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
 	router.HandlerFunc(http.MethodGet, "/swagger/*any", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:4000/static/swagger.json")))
+		httpSwagger.URL("http://159.65.195.0:4000/static/swagger.json")))
 
 	router.ServeFiles("/static/*filepath", http.Dir("docs"))
 	return standardMiddleware.Then(router)

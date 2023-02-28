@@ -435,6 +435,32 @@ paths:
       tags:
       - User
   /users:
+    get:
+      consumes:
+      - application/json
+      description: Getting user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.Error'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/main.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.Error'
+      summary: Get User
+      tags:
+      - User
     post:
       consumes:
       - application/json
@@ -466,39 +492,6 @@ paths:
           schema:
             $ref: '#/definitions/main.Error'
       summary: Register User
-      tags:
-      - User
-  /users/:id:
-    get:
-      consumes:
-      - application/json
-      description: Getting user
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/data.User'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/main.Error'
-        "422":
-          description: Unprocessable Entity
-          schema:
-            $ref: '#/definitions/main.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/main.Error'
-      summary: Get User
       tags:
       - User
 securityDefinitions:

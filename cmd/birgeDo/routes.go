@@ -27,6 +27,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/v1/mytasks", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserTasks))
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/users/:id", app.getUserHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
 	//router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
 	router.HandlerFunc(http.MethodGet, "/swagger/*any", httpSwagger.Handler(

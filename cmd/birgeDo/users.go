@@ -62,6 +62,17 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// @Summary      Get User
+// @Description  Getting user
+// @Tags 		 User
+// @Accept       json
+// @Produce      json
+// @Param		 id path  int  true  "User ID"
+// @Success      200 {object}  data.User
+// @Failure      400  {object}  Error
+// @Failure      422  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /users/:id [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {

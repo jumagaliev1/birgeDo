@@ -121,7 +121,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/mytasks/": {
+        "/mytasks": {
             "get": {
                 "security": [
                     {
@@ -203,10 +203,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "See Other",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.InputRemoveTask"
+                            "$ref": "#/definitions/data.UserTasks"
                         }
                     },
                     "400": {
@@ -275,7 +275,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/room/": {
+        "/room": {
             "post": {
                 "security": [
                     {
@@ -390,7 +390,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/task/": {
+        "/task": {
             "post": {
                 "security": [
                     {
@@ -600,6 +600,56 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/:id": {
+            "get": {
+                "description": "Getting user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/data.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.Error"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/main.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -756,7 +806,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:4000",
+	Host:             "159.65.195.0:4000",
 	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "BirgeDo API",

@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:4000",
+    "host": "159.65.195.0:4000",
     "basePath": "/v1",
     "paths": {
         "/addUser": {
@@ -115,7 +115,7 @@
                 }
             }
         },
-        "/mytasks/": {
+        "/mytasks": {
             "get": {
                 "security": [
                     {
@@ -197,10 +197,10 @@
                     }
                 ],
                 "responses": {
-                    "303": {
-                        "description": "See Other",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/data.InputRemoveTask"
+                            "$ref": "#/definitions/data.UserTasks"
                         }
                     },
                     "400": {
@@ -269,7 +269,7 @@
                 }
             }
         },
-        "/room/": {
+        "/room": {
             "post": {
                 "security": [
                     {
@@ -384,7 +384,7 @@
                 }
             }
         },
-        "/task/": {
+        "/task": {
             "post": {
                 "security": [
                     {
@@ -570,6 +570,56 @@
                 "responses": {
                     "201": {
                         "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/data.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.Error"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/main.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/:id": {
+            "get": {
+                "description": "Getting user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get User",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/data.User"
                         }

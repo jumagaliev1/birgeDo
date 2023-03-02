@@ -29,6 +29,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	router.Handler(http.MethodGet, "/v1/users", dynamicMiddleware.ThenFunc(app.getUserHandler))
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/users/logout", app.logoutUserHandler)
 	//router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
 	router.HandlerFunc(http.MethodGet, "/swagger/*any", httpSwagger.Handler(
 		httpSwagger.URL("http://159.65.195.0:4000/static/swagger.json")))

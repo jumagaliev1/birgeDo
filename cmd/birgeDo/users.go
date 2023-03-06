@@ -76,7 +76,10 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	cookieSessionID, err := r.Cookie("token")
 	if err == http.ErrNoCookie {
-		app.notFoundResponse(w, r)
+		err = app.writeJSON(w, http.StatusOK, envelope{"user": data.AnonymousUser}, nil)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	} else if err != nil {
 		app.serverErrorResponse(w, r, err)

@@ -47,7 +47,7 @@ type application struct {
 // @version         1.0
 // @description     API BirgeDo
 
-// @host      localhost:4000
+// @host      159.65.195.0:4000
 // @BasePath  /v1
 
 // @securityDefinitions.apikey ApiKeyAuth
@@ -60,7 +60,7 @@ func main() {
 
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://birgedo:password@localhost/birgedo", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@db:5432/birgedo?sslmode=disable", "PostgreSQL DSN")
 
 	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 

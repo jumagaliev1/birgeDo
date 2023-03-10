@@ -5,6 +5,7 @@ import (
 	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"net/http"
+	"time"
 )
 
 // @Summary      Register User
@@ -60,4 +61,31 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
+}
+
+// @Summary      Get User
+// @Description  Getting user
+// @Tags 		 User
+// @Accept       json
+// @Produce      json
+// @Success      200 {object}  data.User
+// @Failure      400  {object}  Error
+// @Failure      422  {object}  Error
+// @Failure      500  {object}  Error
+// @Router       /users [get]
+func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+	err := app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) logoutUserHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		return
+	}
+	cookie.Expires = time.Now().Add(-2 * time.Hour)
+	http.SetCookie(w, cookie)
 }

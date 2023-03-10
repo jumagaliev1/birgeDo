@@ -13,8 +13,8 @@ func (app *application) routes() http.Handler {
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 
-	standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
-	dynamicMiddleware := alice.New(app.session.Enable, app.authenticate)
+	standardMiddleware := alice.New(app.enableCORS, app.recoverPanic, app.logRequest)
+	dynamicMiddleware := alice.New(app.authenticate)
 	router.Handler(http.MethodPost, "/v1/room", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createRoom))
 	router.Handler(http.MethodGet, "/v1/room/:id", dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireAccessRoom).ThenFunc(app.showRoom))
 	router.Handler(http.MethodPost, "/v1/task", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createTask))
@@ -27,10 +27,12 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/v1/mytasks", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showUserTasks))
 
 	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
+	router.Handler(http.MethodGet, "/v1/users", dynamicMiddleware.ThenFunc(app.getUserHandler))
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
+	router.HandlerFunc(http.MethodGet, "/v1/users/logout", app.logoutUserHandler)
 	//router.Handler(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer))
 	router.HandlerFunc(http.MethodGet, "/swagger/*any", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:4000/static/swagger.yaml")))
+	  httpSwagger.URL("http://159.65.195.0:4000/static/swagger.json")))
 
 	router.ServeFiles("/static/*filepath", http.Dir("docs"))
 	return standardMiddleware.Then(router)

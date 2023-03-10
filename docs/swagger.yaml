@@ -96,7 +96,7 @@ definitions:
       error:
         type: string
     type: object
-host: localhost:4000
+host: 159.65.195.0:4000
 info:
   contact: {}
   description: API BirgeDo
@@ -449,6 +449,32 @@ paths:
       tags:
       - User
   /users:
+    get:
+      consumes:
+      - application/json
+      description: Getting user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.Error'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/main.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.Error'
+      summary: Get User
+      tags:
+      - User
     post:
       consumes:
       - application/json

@@ -74,29 +74,8 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 // @Failure      500  {object}  Error
 // @Router       /users [get]
 func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
-	cookieSessionID, err := r.Cookie("token")
-	if err == http.ErrNoCookie {
-		err = app.writeJSON(w, http.StatusOK, envelope{"user": data.AnonymousUser}, nil)
-		if err != nil {
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	} else if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-	user, err := app.models.Users.GetForToken(data.ScopeAuthentication, cookieSessionID.Value)
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.invalidAuthenticationTokenResponse(w, r)
-		default:
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	user := app.contextGetUser(r)
+	err := app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

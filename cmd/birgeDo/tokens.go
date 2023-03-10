@@ -2,11 +2,15 @@ package main
 
 import (
 	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"net/http"
+	"strconv"
 	"time"
 )
+
+const SecretKey = "fhkjhfakjfiuhewbfbvbnsmsihiqe"
 
 // @Summary      Authentication User
 // @Description  Authentication user
@@ -58,21 +62,21 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
-	token, err := app.models.Tokens.New(int64(user.ID), 24*time.Hour, data.ScopeAuthentication)
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		Issuer:    strconv.Itoa(user.ID),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+	})
+
+	token, err := claims.SignedString([]byte(SecretKey))
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	cookie := &http.Cookie{
-		Name:     "token",
-		Value:    token.Plaintext,
-		Expires:  token.Expiry,
-		HttpOnly: true,
-		Path:     "/v1",
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
 	}
-	http.SetCookie(w, cookie)
+
 	err = app.writeJSON(w, http.StatusCreated, envelope{"authentication_token": token, "user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

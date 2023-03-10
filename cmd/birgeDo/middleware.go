@@ -3,10 +3,12 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jumagaliev1/birgeDo/internal/data"
 	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"github.com/justinas/nosurf"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -102,16 +104,29 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		token := headerParts[1]
+		accessToken := headerParts[1]
 
 		v := validator.New()
 
-		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+		if data.ValidateTokenPlaintext(v, accessToken); !v.Valid() {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
-		user, err := app.models.Users.GetForToken(data.ScopeAuthentication, token)
+		token, err := jwt.ParseWithClaims(accessToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(SecretKey), nil
+		})
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		claims := token.Claims.(*jwt.RegisteredClaims)
+		id, err := strconv.Atoi(claims.Issuer)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		user, err := app.models.Users.Get(id)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):

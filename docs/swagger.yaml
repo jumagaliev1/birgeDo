@@ -19,6 +19,13 @@ definitions:
       title:
         type: string
     type: object
+  data.InputCreateTask:
+    properties:
+      roomID:
+        type: integer
+      title:
+        type: string
+    type: object
   data.InputRegisterUser:
     properties:
       email:
@@ -336,7 +343,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create Task ...
+      description: Create Task
+      parameters:
+      - description: Input for create task
+        in: body
+        name: InputCreteTask
+        required: true
+        schema:
+          $ref: '#/definitions/data.InputCreateTask'
       produces:
       - application/json
       responses:

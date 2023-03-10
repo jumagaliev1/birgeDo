@@ -397,7 +397,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Create Task ...",
+                "description": "Create Task",
                 "consumes": [
                     "application/json"
                 ],
@@ -408,6 +408,17 @@ const docTemplate = `{
                     "Task"
                 ],
                 "summary": "Create Task",
+                "parameters": [
+                    {
+                        "description": "Input for create task",
+                        "name": "InputCreteTask",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/data.InputCreateTask"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -667,6 +678,17 @@ const docTemplate = `{
         "data.InputCreateRoom": {
             "type": "object",
             "properties": {
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "data.InputCreateTask": {
+            "type": "object",
+            "properties": {
+                "roomID": {
+                    "type": "integer"
+                },
                 "title": {
                     "type": "string"
                 }

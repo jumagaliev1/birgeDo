@@ -57,3 +57,8 @@ type InputAuthUser struct {
 type InputCreateRoom struct {
 	Title string `json:"title"`
 }
+
+type InputCreateTask struct {
+	Title  string `json:"title"`
+	RoomID int64  `json:"roomID"`
+}

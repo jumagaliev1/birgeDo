@@ -15,10 +15,6 @@ import (
 	"time"
 )
 
-type contextKey string
-
-var contextKeyUser = contextKey("user")
-
 type config struct {
 	port int
 	env  string
@@ -47,13 +43,24 @@ type application struct {
 	//}
 }
 
+// @title           BirgeDo API
+// @version         1.0
+// @description     API BirgeDo
+
+// @host      159.65.195.0:4000
+// @BasePath  /v1
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description OAuth protects our entity endpoints
 func main() {
 	var cfg config
 	flag.IntVar(&cfg.port, "port", 4000, "Server port")
 
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://birgedo:password@localhost/birgedo", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://postgres:postgres@db:5432/birgedo?sslmode=disable", "PostgreSQL DSN")
 
 	secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
 

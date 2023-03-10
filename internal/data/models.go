@@ -13,9 +13,10 @@ var (
 )
 
 type Models struct {
-	Users UserModel
-	Task  TaskModel
-	Room  RoomModel
+	Users  UserModel
+	Task   TaskModel
+	Room   RoomModel
+	Tokens TokenModel
 }
 
 func NewModels(db *sql.DB) Models {
@@ -26,7 +27,33 @@ func NewModels(db *sql.DB) Models {
 		Task: TaskModel{
 			DB: db,
 		},
-		Room: RoomModel{DB: db},
+		Room:   RoomModel{DB: db},
+		Tokens: TokenModel{DB: db},
 	}
 
+}
+
+type InputAddUser struct {
+	RoomID int `json:"roomID"`
+	UserID int `json:"userID"`
+}
+
+type InputRemoveTask struct {
+	TaskID int `json:"taskID"`
+	RoomID int `json:"roomID"`
+}
+
+type InputRegisterUser struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type InputAuthUser struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type InputCreateRoom struct {
+	Title string `json:"title"`
 }

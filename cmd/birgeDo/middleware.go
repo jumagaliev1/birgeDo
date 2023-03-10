@@ -1,11 +1,15 @@
 package main
 
 import (
-	"context"
+	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jumagaliev1/birgeDo/internal/data"
+	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"github.com/justinas/nosurf"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 func secureHeaders(next http.Handler) http.Handler {
@@ -38,11 +42,11 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 }
 func (app *application) requireAuthenticatedUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.authenticatedUser(r) == nil {
-			http.Redirect(w, r, "user/login", 302)
+		user := app.contextGetUser(r)
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -58,39 +62,18 @@ func noSurf(next http.Handler) http.Handler {
 
 	return csrfHandler
 }
-func (app *application) authenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		exists := app.session.Exists(r, "userID")
-		if !exists {
-			next.ServeHTTP(w, r)
-			return
-		}
-		user, err := app.models.Users.Get(app.session.GetInt(r, "userID"))
-		if err == data.ErrRecordNotFound {
-			app.session.Remove(r, "userID")
-			next.ServeHTTP(w, r)
-			return
-		} else if err != nil {
-			app.serverError(w, err)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), contextKeyUser, user)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
 
 func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := app.authenticatedUser(r)
 		id, err := app.readIDParam(r)
 		if err != nil {
-			app.notFound(w)
+			app.notFoundResponse(w, r)
 			return
 		}
 		users, err := app.models.Users.GetUsersByRoom(int(id))
 		if err != nil {
-			app.serverError(w, err)
+			app.serverErrorResponse(w, r, err)
 			return
 		}
 		for _, val := range users {
@@ -99,6 +82,81 @@ func (app *application) requireAccessRoom(next http.Handler) http.Handler {
 				return
 			}
 		}
-		http.Redirect(w, r, "/myrooms", 302)
+		app.notPermittedResponse(w, r)
+	})
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Authorization")
+
+		authorizationHeader := r.Header.Get("Authorization")
+
+		if authorizationHeader == "" {
+			r = app.contextSetUser(r, data.AnonymousUser)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		headerParts := strings.Split(authorizationHeader, " ")
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		accessToken := headerParts[1]
+
+		v := validator.New()
+
+		if data.ValidateTokenPlaintext(v, accessToken); !v.Valid() {
+			app.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		token, err := jwt.ParseWithClaims(accessToken, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(SecretKey), nil
+		})
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		claims := token.Claims.(*jwt.RegisteredClaims)
+		id, err := strconv.Atoi(claims.Issuer)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		user, err := app.models.Users.Get(id)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				app.invalidAuthenticationTokenResponse(w, r)
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+
+		r = app.contextSetUser(r, user)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Method")
+		origin := r.Header.Get("Origin")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
+			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, PATCH, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Credentials")
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
 	})
 }

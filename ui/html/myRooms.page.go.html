@@ -1,8 +1,0 @@
-{{template "base" .}}
-{{define "title"}}Home{{end}}
-{{define "body"}}
-{{range .Rooms}}
-
-<a href="/room/{{.ID}}">{{.Title}}</a>
-{{end}}
-{{end}}

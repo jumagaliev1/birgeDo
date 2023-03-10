@@ -4,12 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/jumagaliev1/birgeDo/internal/validator"
 	"time"
 )
 
 type Room struct {
 	ID    int64  `json:"id"`
 	Title string `json:"title"`
+}
+
+func ValidateRoom(v *validator.Validator, room *Room) {
+	v.Check(room.Title != "", "title", "must be provided")
+	v.Check(len(room.Title) > 100, "title", "must be less than 100 bytes long")
 }
 
 type RoomModel struct {

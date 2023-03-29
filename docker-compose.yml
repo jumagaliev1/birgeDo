@@ -8,8 +8,6 @@ services:
       - "4000:4000"
     depends_on:
       - db
-    networks:
-      - backend
 
   db:
     restart: always
@@ -23,18 +21,11 @@ services:
       PGDATA: "/var/lib/postgresql/data/pgdata"
     ports:
       - "5436:5432"
-    networks:
-      - backend
   migrate:
     image: migrate/migrate
     depends_on:
       - db
     volumes:
       - ./../migrations:/migrations
-    networks:
-      - backend
     command:
       [ "-path", "/migrations", "-database", "postgresql://postgres:postgres@db:5436/postgres?sslmode=disable", "up" ]
-networks:
-  backend:
-    driver: bridge

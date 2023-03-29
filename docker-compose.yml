@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: ./
-    command: ./birgedo
+    command: ./root/birgedo
     ports:
       - "4000:4000"
     depends_on:

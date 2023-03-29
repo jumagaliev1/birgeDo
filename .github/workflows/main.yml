@@ -1,6 +1,5 @@
 name: CI
-on:
-  workflow_dispatch:
+on: workflow_dispatch
 env:
   REGISTRY: "registry.digitalocean.com/birgedo"
   IMAGE_NAME: "birgedo_app"

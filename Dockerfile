@@ -11,8 +11,8 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=0 /app/birgedo .
+COPY --from=0 ./app/birgedo .
 
 EXPOSE 4000
 
-CMD ["pwd","./birgedo"]
+CMD ["./birgedo"]

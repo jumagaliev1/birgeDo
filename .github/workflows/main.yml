@@ -1,9 +1,5 @@
 name: CI
 on:
-  push:
-    branches:
-      - RESTapi
-      - main
   workflow_dispatch:
 env:
   REGISTRY: "registry.digitalocean.com/birgedo"

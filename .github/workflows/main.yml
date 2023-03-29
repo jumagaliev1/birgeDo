@@ -5,7 +5,6 @@ on:
     branches:
       - RESTapi
       - main
-
 env:
   REGISTRY: "registry.digitalocean.com/birgedo"
   IMAGE_NAME: "birgedo_app"

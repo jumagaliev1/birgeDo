@@ -5,13 +5,13 @@ WORKDIR /app
 COPY . .
 
 RUN go mod download
-RUN GOOS=linux go build -o birgedo ./cmd/birgeDo/
+RUN GOOS=linux go build -o ./birgedo ./cmd/birgeDo/
 
 FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=0 ./app/birgedo .
+COPY --from=0 /app/birgedo .
 
 EXPOSE 4000
 

@@ -56,5 +56,5 @@ jobs:
             --restart always \
             --publish 4000:4000 \
             --name $(echo $CONTAINER_NAME) \
-            --network birgedo_default
+            --network birgedo_default \
             $(echo $REGISTRY)/$(echo $IMAGE_NAME):$(echo $GITHUB_SHA | head -c7)

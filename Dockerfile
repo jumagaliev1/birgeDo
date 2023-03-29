@@ -11,7 +11,7 @@ FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=0 /app/birgeo .
+COPY --from=0 /app/birgedo .
 
 EXPOSE 4000
 

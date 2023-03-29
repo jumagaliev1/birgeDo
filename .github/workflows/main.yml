@@ -1,6 +1,10 @@
 name: CI
-on: [workflow_dispatch]
-
+on:
+  push:
+    branches:
+      - RESTapi
+      - main
+  
 env:
   REGISTRY: "registry.digitalocean.com/birgedo"
   IMAGE_NAME: "birgedo_app"

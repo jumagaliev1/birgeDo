@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
     networks:
-      - backend
+      - host
 
   db:
     restart: always
@@ -24,7 +24,7 @@ services:
     ports:
       - "5436:5432"
     networks:
-      - backend
+      - host
   migrate:
     image: migrate/migrate
     depends_on:
@@ -32,9 +32,10 @@ services:
     volumes:
       - ./../migrations:/migrations
     networks:
-      - backend
+      - host
     command:
       [ "-path", "/migrations", "-database", "postgresql://postgres:postgres@db:5436/postgres?sslmode=disable", "up" ]
 networks:
-  backend:
-    driver: host
+  host:
+    name: host
+    external: true

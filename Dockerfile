@@ -15,4 +15,4 @@ COPY --from=0 /app/birgedo .
 
 EXPOSE 4000
 
-CMD ["./birgedo"]
+CMD ["./app/birgedo"]

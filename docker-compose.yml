@@ -8,8 +8,6 @@ services:
       - "4000:4000"
     depends_on:
       - db
-    networks:
-      - host
 
   db:
     restart: always
@@ -23,19 +21,11 @@ services:
       PGDATA: "/var/lib/postgresql/data/pgdata"
     ports:
       - "5436:5432"
-    networks:
-      - host
   migrate:
     image: migrate/migrate
     depends_on:
       - db
     volumes:
       - ./../migrations:/migrations
-    networks:
-      - host
     command:
       [ "-path", "/migrations", "-database", "postgresql://postgres:postgres@db:5436/postgres?sslmode=disable", "up" ]
-networks:
-  host:
-    name: host
-    external: true

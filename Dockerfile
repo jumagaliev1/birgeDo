@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . .
 
 RUN go mod download
-RUN GOOS=linux go build -o ./birgedo ./cmd/birgeDo/
+RUN GOOS=linux go build -o /birgedo ./cmd/birgeDo/
 
 FROM alpine:latest
 

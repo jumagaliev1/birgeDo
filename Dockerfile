@@ -12,7 +12,7 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=0 /app/birgedo .
-COPY --from=0 /app/docs ./static
+COPY --from=0 /app/docs ./docs
 
 EXPOSE 4000
 

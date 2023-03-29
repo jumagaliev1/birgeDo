@@ -1,11 +1,11 @@
-FROM golang:1.18 AS builder
+FROM golang:1.20.2-alpine3.16 AS builder
 
 WORKDIR /app
 
 COPY . .
 
 RUN go mod download
-RUN GOOS=linux go build -o /birgedo ./cmd/birgeDo/
+RUN GOOS=linux go build -o ./birgedo ./cmd/birgeDo/
 
 FROM alpine:latest
 
